@@ -1,13 +1,13 @@
 <p align="center">
   <h1 align="center">Lyrion Core G0</h1>
   <p align="center">
-    <strong>STM32G071CBU6 Voice &amp; Audio Development Board</strong><br>
-    NAU88C22 audio codec with I2S half-duplex voice, analog microphone, 40 mm speaker and 3.5 mm line-in/line-out jacks, multiple Lyrion Link module ports, OLED UI
+    STM32G071CBU6 Voice &amp; Audio Development Board<br>
+    NAU88C22 audio codec with I2S half-duplex voice, electret microphone, 40 mm speaker, switched 3.5 mm line-in/line-out jacks, dual Lyrion Link radio sockets, LMS smart expansion port, 4-button OLED UI, and integrated LiPo battery management with dynamic power-path.
   </p>
 </p>
 
 <p align="center">
-  <a href="#status--roadmap"><img alt="Status: Planning" src="https://img.shields.io/badge/Status-Planning-bf8700?style=flat-square"></a>
+  <a href="#status--roadmap"><img alt="Status: Planning Freeze" src="https://img.shields.io/badge/Status-Design%20Freeze-bf8700?style=flat-square"></a>
   <a href="#core-hardware"><img alt="MCU: STM32G071" src="https://img.shields.io/badge/MCU-STM32G071-0969da?style=flat-square"></a>
   <a href="#audio-subsystem"><img alt="Audio: NAU88C22" src="https://img.shields.io/badge/Audio-NAU88C22-6639ba?style=flat-square"></a>
   <a href="#lyrion-link-ports"><img alt="Radio: CC1101" src="https://img.shields.io/badge/Radio-CC1101-6639ba?style=flat-square"></a>
@@ -23,86 +23,91 @@
 3. [System Overview](#system-overview)
 4. [Core Hardware](#core-hardware)
 5. [Audio Subsystem](#audio-subsystem)
-6. [Lyrion Link Ports](#lyrion-link-ports)
-7. [Display & User Interface](#display--user-interface)
-8. [Power System](#power-system)
+6. [Radio & Smart Module Ports](#radio--smart-module-ports)
+7. [Display, UI & Expansion](#display-ui--expansion)
+8. [Power & Battery Management](#power--battery-management)
 9. [Firmware](#firmware)
 10. [Design Decisions](#design-decisions)
 11. [Status & Roadmap](#status--roadmap)
-12. [Known Limitations & Open Questions](#known-limitations--open-questions)
-13. [License](#license)
+12. [License](#license)
 
 ---
 
 ## What is it?
 
-Lyrion Core G0 is the **Pro-tier member of the Lyrion Core family** — a development board built around the **STM32G071CBU6** (Cortex-M0+ @ 64 MHz, 128 KB flash, 36 KB RAM). Where the [Lyrion Core C0](https://github.com/oliskcz/Lyrion-Core-C0) is the cheap leaf-node radio board, the G0 adds the things the C0 cannot do: **audio capture and playback**, a **real user interface**, and a **host port for smart Lyrion Link modules**.
+Lyrion Core G0 is the Pro-tier member of the Lyrion Core family — a development board built around the STM32G071CBU6 (Cortex-M0+ @ 64 MHz, 128 KB flash, 36 KB RAM). Where the [Lyrion Core C0](https://github.com/oliskcz/Lyrion-Core-C0) is the compact leaf-node radio board, the G0 adds the capabilities the C0 cannot do: digital audio capture and playback, a dedicated 4-button menu interface, dual CC1101 sockets, an LMS smart module port, and portable battery operation with hardware power-path switching.
 
-The board is designed as the voice terminal of the Lyrion ecosystem: an analog electret microphone, a Nuvoton **NAU88C22** audio codec and a 40 mm speaker turn it into a push-to-talk (PTT) voice node, while two legacy CC1101 sockets and one M1 module port keep it compatible with the existing Lyrion Link radio modules. Two 3.5 mm jacks — one **line-in**, one **headphone/line-out** — let the OLED menu pick where audio comes from and where it goes.
-
-It is **not** a Hi-Fi player and **not** a finished product. It is a bring-up platform for the STM32G0 series, I2S audio, half-duplex voice links, and the Pro build of the Lyrion Link protocol (mesh relay, file transfer, voice).
-
-Target work covers STM32G0 bring-up, NAU88C22 codec experiments, PTT voice links over CC1101, Lyrion Link Pro protocol development, and the first hardware that can run the full Lyrion Link stack with audio.
+The board serves as the primary voice and telemetry node of the Lyrion ecosystem: an analog electret microphone, a Nuvoton NAU88C22YG audio codec, and a 40 mm speaker turn it into a push-to-talk (PTT) voice terminal. Two switched 3.5 mm jacks (line-in and headphone/line-out) provide external audio routing with automated hardware insertion detection.
 
 ---
 
 ## Key Features
 
 | Feature | Specification |
-|---------|---------------|
-| **MCU** | STM32G071CBU6, Cortex-M0+ @ 64 MHz, 128 KB flash, 36 KB RAM, UFQFPN-48 |
-| **Audio codec** | Nuvoton NAU88C22YG — 24-bit stereo ADC/DAC, BTL speaker driver (1 W / 8 Ω), headphone driver, I²S + I²C |
-| **Microphone** | INGHAi GMI9745P-30dB electret condenser, differential input via codec PGA + MICBIAS |
-| **Speaker** | XHXDZ 40 mm, 8 Ω, 2 W — case-mounted, driven from the codec BTL output |
-| **Audio jacks** | 3.5 mm stereo **input** (line-in, codec `LLIN`/`RLIN`) + 3.5 mm stereo **output** (headphone/line-out, codec `LHP`/`RHP`, `ENABLE_HP_JACK`) |
-| **Display** | 0.96" SSD1306 OLED 128×64 on I²C1 @ 0x3C (1.3" SH1106 drop-in option) |
-| **Sensors** | TMP102 temperature sensor on I²C1 @ 0x49 |
-| **Lyrion Link ports** | J1 + J3 raw CC1101 sockets (shared SPI2), plus the M1 smart-module port (UART + CS + IRQ) |
-| **User interface** | PTT button (PA1), second button (PA2), LED1/LED2 (PC0/PC1), WS2812B status LED (PB1, TIM3 + DMA) |
-| **Console / debug** | CH340 USB-UART on USART1 (PA9/PA10) with ROM-bootloader entry, SWD header (PA13/PA14) |
-| **Power** | USB-C 5 V input (power + CH340 serial), AP2112K 3.3 V LDO, filtered VBUS rail for the codec speaker supply |
-| **Board** | 2-layer, through-hole module headers, ~100 × 70 mm class (TBD) |
+|---|---|
+| MCU | STM32G071CBU6, Cortex-M0+ @ 64 MHz, 128 KB flash, 36 KB RAM, UFQFPN-48 |
+| Audio codec | Nuvoton NAU88C22YG — 24-bit stereo ADC/DAC, BTL speaker driver (1 W / 8 Ω), headphone driver, I2S + I2C |
+| Microphone | INGHAi GMI9745P-30dB electret condenser, differential input via codec PGA + MICBIAS |
+| Speaker | XHXDZ 40 mm, 8 Ω, 2 W — case-mounted, driven directly by codec BTL output |
+| Audio jacks | 3.5 mm stereo input (line-in, codec LLIN/RLIN) + 3.5 mm stereo output (headphone/line-out, codec LHP/RHP) with switched jack-detect inputs (PC7 / PC13) |
+| Display | 0.96" SSD1306 OLED 128×64 on 4-pin I2C1 header @ 0x3C (1.3" SH1106 option) |
+| Sensors | TMP102 temperature sensor on I2C1 @ 0x49 |
+| Radio sockets | LL1 + LL2 raw CC1101 sockets on shared SPI2 bus (PA0, PB14, PB15) + discrete CS and GDO lines |
+| Smart port | LMS (Lyrion Smart Port standard) 1x7 2.54 mm header (5V, 3.3V, GND, TX, RX, CS, IRQ) |
+| UI controls | 4-button OLED navigation matrix (UP PB8, DOWN PB9, OK PA15, BACK PC14) + dedicated PTT button (PA1) |
+| Indicators | Discrete LED1 (PC0), LED2 (PC1), and 1x addressable WS2812B RGB LED (PB1, TIM3_CH4 + DMA1) |
+| Expansion headers | Spare UART (USART2), Spare I2C (I2C2), Spare SPI (with CS_SPARE), and ADC / DAC header (2x DAC, 2x ADC) |
+| Battery management | IP2312-4V35 buck charger (1A/1.5A/3A solder bridges, NTC), XB5352A 1S LiPo protection IC |
+| Power-path | Dynamic load sharing: MT3608 5V boost converter automatically disabled on USB connection; 5V_SYS powered from USB 5V or battery |
+| Logic regulation | TLV75733PDBVR low-dropout regulator fed by 5V_SYS for rock-solid 3.30V logic rail |
+| Fuel gauge | 2:1 precision resistive divider from VBAT into PB12 (ADC1_IN16) |
+| Console & debug | CH340C USB-UART on USART1 (PA9/PA10), 5-pin 2.54 mm SWD header with NRST |
 
 ---
 
 ## System Overview
 
 ```mermaid
-flowchart LR
-    USB["USB-C 5 V<br/>(power + CH340 data)"] --> LDO["AP2112K-3.3<br/>600 mA LDO"]
-    USB --> SPKRAIL["VBUS 5 V filtered<br/>(codec VDDSPK)"]
-    USB <--> CH340["CH340<br/>USB-UART"]
+flowchart TD
+    subgraph Power ["Power & Battery Subsystem"]
+        USBC["USB-C 5 V"] --> IP["IP2312 Buck Charger"]
+        IP --> PROT["XB5352A Protection"]
+        BATT["1S LiPo Battery"] <--> PROT
+        PROT --> BOOST["MT3608 5V Boost"]
+        USBC -.->|"USB Detect (NPN Disable)"| BOOST
+        USBC -->|"Schottky"| SYS5V["5V_SYS Rail"]
+        BOOST -->|"Schottky"| SYS5V
+        SYS5V --> LDO["TLV75733 LDO"]
+        LDO --> V33["3.3V Logic Rail"]
+    end
 
-    MCU["STM32G071CBU6<br/>Cortex-M0+ 64 MHz"]
+    subgraph MCU_Block ["STM32G071CBU6 MCU"]
+        MCU["Cortex-M0+ @ 64 MHz"]
+    end
 
-    MCU <-->|"I2C1 (PB6/PB7)"| CODEC["NAU88C22YG<br/>audio codec"]
-    MCU -->|"I2S1 half-duplex (PB3/PB0/PB5/PB4)"| CODEC
-    CODEC -->|"BTL"| SPK["40 mm 8 Ω 2 W<br/>speaker"]
-    MIC["GMI9745P-30dB<br/>electret mic"] --> CODEC
-    LINEIN["3.5 mm input<br/>(line-in)"] -->|"LLIN/RLIN"| CODEC
-    CODEC -->|"LHP/RHP"| JACK["3.5 mm output<br/>(headphone/line-out)"]
+    subgraph Audio_Block ["Audio Subsystem"]
+        CODEC["NAU88C22YG Codec"]
+        MIC["Electret Mic"] --> CODEC
+        JIN["3.5 mm Line-In"] --> CODEC
+        CODEC --> SPK["40 mm 8 Ω Speaker (BTL)"]
+        CODEC --> JOUT["3.5 mm Headphone Out"]
+    end
 
-    MCU <-->|"SPI2 (PA0/PB14/PB15)"| J1["J1 — CC1101"]
-    MCU <-->|"SPI2 (shared)"| J3["J3 — CC1101"]
-    MCU <-->|"USART3 (PC4/PC5)"| M1["M1 — smart module port"]
+    SYS5V -->|"VDDSPK (1W)"| CODEC
+    SYS5V --> WS["WS2812B RGB LED"]
+    V33 --> MCU
+    V33 --> CODEC
 
-    MCU <-->|"I2C1"| OLED["SSD1306 OLED<br/>128×64"]
-    MCU <-->|"I2C1"| TMP["TMP102<br/>temperature"]
-    MCU -->|"TIM3_CH4 + DMA"| WS["WS2812B"]
-    BTN["PTT + BTN2"] --> MCU
-    MCU --> LED["LED1 / LED2"]
-    CH340 <-->|"USART1"| MCU
+    MCU <-->|"I2C1"| CODEC
+    MCU <-->|"I2S1 Half-Duplex"| CODEC
+    MCU <-->|"I2C1"| OLED["SSD1306 OLED"]
+    MCU <-->|"I2C1"| TMP["TMP102 Temp"]
+    MCU -->|"TIM3_CH4 PWM"| WS
+    MCU <-->|"SPI2"| LL1["LL1 (CC1101 #1)"]
+    MCU <-->|"SPI2"| LL2["LL2 (CC1101 #2)"]
+    MCU <-->|"USART3 + CS + IRQ"| LMS["LMS 1x7 Smart Port"]
+    MCU <-->|"USART1"| CH340["CH340C USB-UART"]
 ```
-
-### Block summary
-
-| Block | Role |
-|-------|------|
-| **MCU** | Runs the Lyrion Link Pro stack, audio engine, UI and all drivers |
-| **Codec** | Single-chip audio front end: mic + line-in paths into the ADC, DAC out to BTL speaker amp and 3.5 mm output |
-| **Radio ports** | Two raw CC1101 sockets (legacy, shared SPI2) and one M1 module port (smart module with its own MCU) |
-| **UI** | OLED for status/menus, PTT and second button, two plain LEDs and one addressable RGB LED |
-| **Power** | USB-C powered; 3.3 V digital rail from an LDO; speaker rail taken from filtered VBUS for full BTL output |
 
 ---
 
@@ -111,126 +116,75 @@ flowchart LR
 ### MCU — STM32G071CBU6
 
 - Cortex-M0+ @ 64 MHz, 128 KB flash, 36 KB RAM (32 KB with parity), UFQFPN-48 (7 × 7 mm)
-- **Single I2S instance** (I2S1, multiplexed on SPI1) — see [Audio Subsystem](#audio-subsystem)
-- 2× SPI, 2× I²C (FM+), 4× USART + 1× LPUART, 2× 12-bit DAC, 17× 12-bit ADC channels
-- No USB FS peripheral (UCPD only) — the USB-C connector carries power plus the CH340 USB-UART link
-- HSI16 internal oscillator; no HSI48/CRS
-
-### Audio codec — NAU88C22YG
-
-- 24-bit stereo codec: 2× ADC (differential mic preamps + MICBIAS + PGA), 2× DAC
-- Stereo **line input** (`LLIN`/`RLIN`, shared with the alternate mic inputs) for the 3.5 mm input jack
-- BTL loudspeaker driver: 1 W into 8 Ω at 5 V (≈0.4 W at 3.3 V)
-- Stereo headphone/line driver: 40 mW into 16 Ω (`LHP`/`RHP`) for the 3.5 mm output jack
-- I²S/PCM digital interface (slave or master), I²C control @ 0x1A
-- QFN-32, 5 × 5 mm; analog supply 2.5–3.6 V, digital 1.65–3.6 V
-
-### Clocking (UNVERIFIED)
-
-The codec needs a 12.288 MHz MCLK for 48 kHz audio. The firmware skeleton currently selects the **PLL I2S** clock for I2S1 (`RCC_I2S1CLKSOURCE_PLL` in `stm32g0xx_hal_msp.c`); an alternative Rev A option is a **12.288 MHz audio-grade HSE crystal** feeding the I2S1 kernel clock directly. The exact configuration (and resulting MCLK accuracy) must be validated during Phase 1 — see [Known Limitations & Open Questions](#known-limitations--open-questions).
+- Single I2S instance (I2S1, on SPI1) for digital audio
+- 2x SPI, 2x I2C, 4x USART + 1x LPUART, 2x 12-bit DAC, 17x 12-bit ADC channels
+- 44 usable GPIOs with fully conflict-free EXTI line mapping
+- External 12.288 MHz audio crystal on PF0/PF1 for exact 48 kHz audio clocking
 
 ---
 
 ## Audio Subsystem
 
-### Why the NAU88C22?
+### Digital Audio Architecture (Half-Duplex PTT)
 
-The board was specified with either the **NAU88C10YG** (mono, QFN-20) or the **NAU88C22YG** (stereo, QFN-32). Rev A uses the **NAU88C22YG** because it matches the existing firmware driver, adds a stereo DAC and headphone output (useful on a dev board), and keeps the same I²S + I²C interface as the C10. The C10 remains the documented cost-down option for a future mono revision.
+The board operates in half-duplex push-to-talk mode over I2S1:
+- Playback: MCU operates as I2S master TX at 48 kHz, driving the codec DAC.
+- Capture: MCU operates as I2S slave RX, sampling the codec ADC.
+- Shared SD Pin: Both DACIN and ADCOUT are tied to PB5 (I2S1_SD), with codec register power gating ensuring only one path drives the net at any time.
 
-| | NAU88C10YG | NAU88C22YG (Rev A) |
-|---|---|---|
-| Package | QFN-20, 4 × 4 mm | QFN-32, 5 × 5 mm |
-| ADC / DAC | 1 / 1 (mono) | 2 / 2 (stereo) |
-| Mic inputs | 1 differential + PGA | 2 differential + PGA |
-| BTL speaker | 1 W / 8 Ω @ 5 V | 1 W / 8 Ω @ 5 V |
-| Headphone | 40 mW / 16 Ω | 40 mW / 16 Ω |
-| Sample rate | 8–48 kHz | 8–192 kHz |
-| LCSC | C914208 | C914209 |
+### Transducers & Connectivity
 
-### Half-duplex I²S (PTT)
-
-The STM32G071 exposes **one I²S peripheral**, and the STM32G0 HAL supports only half-duplex modes (`MASTER_TX` / `SLAVE_RX` / etc.). Lyrion Core G0 therefore runs **PTT-style half-duplex audio**:
-
-- **Playback** — MCU is I²S **master TX** at 48 kHz, DMA double-buffered (`audio_play_pcm`, `audio_beep`).
-- **Capture** — MCU is I²S **slave RX**; the codec drives BCLK/FS (`audio_capture_start`).
-- `audio_set_mode()` switches direction and calls `nau88c22_select_path()`, which powers down the unused path so the shared `I2S1_SD` net is always driven by exactly one side.
-
-The codec's `DACIN` and `ADCOUT` are both wired to **PB5** (`I2S1_SD`); BCLK = PB3, FS = PB0, MCLK = PB4.
-
-### Microphone
-
-- **INGHAi GMI9745P-30dB** electret condenser, 9.7 × 4.5 mm, sensitivity −30 dB (0 dB = 1 V/Pa)
-- Bias from the codec **MICBIAS** through a 2.2 kΩ resistor; AC-coupled into the differential **MIC1±** input
-- Gain set in software via the codec PGA (`nau88c22_set_mic_gain`, 0.5 dB/step)
-- Capture source A in the audio routing menu; optional external mic header on the PCB (TBD)
-
-### Speaker and 3.5 mm output
-
-- **XHXDZ 40 mm, 8 Ω, 2 W** full-range driver, mounted in the case, connected through a 2-pin connector
-- Driven directly by the codec BTL output — 1 W at 5 V `VDDSPK`, ≈0.4 W at 3.3 V; adequate for voice, not for loud music
-- **J_OUT** 3.5 mm stereo jack on the codec headphone/line output (`LHP`/`RHP`, enabled by `ENABLE_HP_JACK`)
-
-### 3.5 mm line input
-
-- **J_IN** 3.5 mm stereo jack (Tip = left, Ring = right, Sleeve = ground) wired through AC coupling capacitors to the codec **`LLIN`/`RLIN`** pins
-- Line-level input (~1 V<sub>RMS</sub> full scale) — for a phone, PC or radio line-out as an alternative to the on-board mic
-- The codec input mixer selects mic vs line-in per channel, so the choice is a register write, not a hardware switch
-- A mono (TS) plug shorts the ring to ground; capture then uses the left channel only (or a summed mono mix)
-
-### Audio routing (UI)
-
-Capture source and playback destination are software-selected; the planned OLED menu is:
-
-| Menu item | Options |
-|-----------|---------|
-| **Input** | On-board mic (GMI9745P) · 3.5 mm line-in |
-| **Output** | Speaker (BTL) · 3.5 mm output jack · both |
-
-Routing is codec register configuration (input PGA/mixer select, output mixer/power), not an analog switch — the jacks are permanently connected to their codec pins.
+- Onboard Microphone: INGHAi GMI9745P-30dB electret condenser mic wired differentially to MIC1P/MIC1N with 2.2k pull-up to MICBIAS.
+- Loudspeaker: Case-mounted 40 mm 8 Ω 2 W driver powered by the codec differential BTL amplifier at 5V VDDSPK (~1W output).
+- Line-In Jack (J_IN): Switched 3.5 mm TRS stereo jack wired through AC-coupling capacitors to LLIN/RLIN. Mechanical switch pulls PC7 low when plugged in.
+- Headphone/Line-Out Jack (J_OUT): Switched 3.5 mm TRS stereo jack driven by codec LHP/RHP. Mechanical switch pulls PC13 low when plugged in, allowing firmware to auto-mute the speaker.
 
 ---
 
-## Lyrion Link Ports
+## Radio & Smart Module Ports
 
-The G0 exposes **three Lyrion Link module ports**:
-
-| Port | Type | Interface | Pins |
-|------|------|-----------|------|
-| **J1** | Raw CC1101 socket | SPI2 (shared) + CS1 + GDO0/GDO2 | PA8, PA11, PA12 |
-| **J3** | Raw CC1101 socket | SPI2 (shared) + CS2 + GDO0/GDO2 | PC6, PB2, PB10 |
-| **M1** | Smart module port | USART3 + CS3 + IRQ | PC4, PC5, PC2, PC3 |
-
-- J1 and J3 are the same **2.54 mm through-hole sockets** used on the Core C0, wired to the shared SPI2 bus (PA0 = SCK, PB14 = MISO, PB15 = MOSI). There is **no reset line** — the CC1101 is reset with the SRES strobe, as on the C0.
-- The **M1 port** targets the Lyrion Link M1 smart modules (CC1101 + their own MCU) over UART, with a chip-select and an interrupt line for future SPI-based modules.
-- See [`docs/PINOUT.md`](docs/PINOUT.md) for the full connector pinouts and [`docs/CONNECTIONS.txt`](docs/CONNECTIONS.txt) for the master net list.
-
----
-
-## Display & User Interface
-
-| Item | Details |
-|------|---------|
-| **OLED** | 0.96" SSD1306 128×64, I²C1 @ 0x3C, `Drivers/OLED/ssd1306.c` |
-| **Temperature** | TMP102 @ 0x49, `Drivers/TMP102/tmp102.c` |
-| **PTT button** | PA1, EXTI (line 1) — push-to-talk for voice |
-| **BTN2** | PA2, EXTI (line 2) — **conflict: shares EXTI line 2 with GDO0_2 (PB2), see open questions** |
-| **LED1 / LED2** | PC0 / PC1, plain status LEDs |
-| **WS2812B** | PB1, TIM3_CH4 + DMA1 — RGB status / notifications |
-| **Audio routing menu** | Planned (Phase 4/5): input source (mic/line-in), output source (speaker/3.5 mm/both), volume — see [Audio routing](#audio-routing-ui) |
+- LL1 Socket: Raw CC1101 socket on shared SPI2 (PA0=SCK, PB14=MISO, PB15=MOSI) + CS1 (PA8) + GDO0_1 (PA11, EXTI11) + GDO2_1 (PA12).
+- LL2 Socket: Raw CC1101 socket on shared SPI2 + CS2 (PC6) + GDO0_2 (PB2, EXTI2) + GDO2_2 (PB10).
+- LMS (Lyrion Smart Port standard): 1x7 2.54 mm header:
+  - Pin 1: 5V
+  - Pin 2: 3.3V
+  - Pin 3: GND
+  - Pin 4: TX (PC4, USART3_TX)
+  - Pin 5: RX (PC5, USART3_RX)
+  - Pin 6: CS (PC2, LMS_CS)
+  - Pin 7: IRQ (PC3, LMS_IRQ, EXTI line 3)
 
 ---
 
-## Power System
+## Display, UI & Expansion
 
-| Rail | Source | Consumers |
-|------|--------|-----------|
-| **VBUS 5 V** | USB-C receptacle (5.1 kΩ CC pulldowns) | Codec `VDDSPK` (filtered + bulk 470 µF), LDO input, CH340 |
-| **3V3** | AP2112K-3.3, 600 mA LDO | MCU, codec digital/analog, OLED, TMP102, CC1101 modules, WS2812B |
-| **Codec VDDSPK** | Filtered VBUS | BTL speaker driver only |
+- 4-Button OLED Navigation Matrix:
+  - UP: PB8 (EXTI line 8)
+  - DOWN: PB9 (EXTI line 9)
+  - OK: PA15 (EXTI line 15)
+  - BACK: PC14 (EXTI line 14)
+- PTT Button: PA1 (EXTI line 1).
+- OLED Display Header: 4-pin 2.54 mm header on I2C1 (PB6=SCL, PB7=SDA, 3.3V, GND).
+- Temperature Sensor: Onboard Texas Instruments TMP102 on I2C1 (address 0x49 or 0x48).
+- Indicators: LED1 (PC0), LED2 (PC1), and 1x WS2812B RGB LED on PB1 (TIM3_CH4 PWM + DMA1).
+- Spare UART Header (1x4): 3.3V, TX (PA2, USART2), RX (PA3, USART2), GND.
+- Spare I2C Header (1x4): 3.3V, SCL (PB13, I2C2), SDA (PB11, I2C2), GND.
+- Spare SPI Header (1x6): 3.3V, GND, SCK (PA0), MISO (PB14), MOSI (PB15), CS_SPARE (PC15).
+- ADC / DAC Header (1x4): DAC1_OUT1 (PA4), DAC1_OUT2 (PA5), ADC1_IN6 (PA6), ADC1_IN7 (PA7).
 
-Rough 3V3 budget: MCU ≈ 15 mA, codec ≈ 15 mA, OLED ≈ 20 mA, TMP102 ≈ 1 mA, CH340 ≈ 10 mA, WS2812B ≤ 60 mA, two CC1101 modules ≤ 100 mA in TX — well within the 600 mA LDO. The speaker draws its peaks from VBUS, not the LDO.
+---
 
-The G071 itself has no USB peripheral, so the USB-C connector carries power **and** the CH340 USB 2.0 full-speed link; the CH340 exposes USART1 as the console and ROM-bootloader port. Flashing is possible over the CH340 or the SWD header.
+## Power & Battery Management
+
+- Battery Charger: Injoinic IP2312-4V35 synchronous buck charger with solder bridges (1A / 1.5A / 3A) and battery NTC thermistor input.
+- Battery Protection: XB5352A monolithic 1S LiPo protection IC (2.8V cutoff, 4.28V overcharge, short-circuit clamp).
+- Boost Converter: MT3608 1.2 MHz boost converter stepping VBAT up to 5.0V.
+- Dynamic Power-Path (Load Sharing):
+  - USB 5V turns on an NPN transistor that pulls the MT3608 EN pin low when USB is connected (zero battery drain/cycling).
+  - System 5V rail (5V_SYS) is powered directly from USB 5V (via Schottky diode) when plugged in, and MT3608 when on battery.
+- Logic LDO: TLV75733PDBVR powered from 5V_SYS, guaranteeing steady 3.30V logic rail without dropout.
+- Speaker Supply: VDDSPK powered by 5V_SYS, delivering full 1W speaker power in both USB and battery modes.
+- Battery Fuel Gauge: 2x 100k precision resistive divider from VBAT into PB12 (ADC1_IN16).
 
 ---
 
@@ -260,70 +214,32 @@ Lyrion-Core-G0/
 └── README.md
 ```
 
-Feature toggles live in `Core/Inc/config.h` (`ENABLE_UART1`, `ENABLE_WS2812`, `ENABLE_OLED`, `ENABLE_I2C`, `ENABLE_TMP102`, `ENABLE_SPI`, `ENABLE_CC1101`, `ENABLE_AES`, `ENABLE_AUDIO`, `ENABLE_CODEC`, `ENABLE_HP_JACK`, `ENABLE_LINE_IN`, `ENABLE_AUDIO_ROUTING`, `CC1101_ENABLE_RADIO1/2`, `LL_*`). The authoritative pin map is [`Core/Inc/g0_pinmap.h`](Core/Inc/g0_pinmap.h), mirrored by [`docs/PINOUT.md`](docs/PINOUT.md).
-
-**Build:** open in STM32CubeIDE (or import the CubeMX project once `STM32_Lyrion_Core_G0.ioc` exists) and build. `main.c` and the `.ioc` are the two missing pieces — tracked in [`docs/REMAINING.md`](docs/REMAINING.md).
+Authoritative pin definitions live in [Core/Inc/g0_pinmap.h](Core/Inc/g0_pinmap.h) and [Core/Inc/main.h](Core/Inc/main.h), mirrored by [docs/PINOUT.md](docs/PINOUT.md) and [docs/CONNECTIONS.txt](docs/CONNECTIONS.txt).
 
 ---
 
 ## Design Decisions
 
-### 1. NAU88C22YG (not the C10) for Rev A
-
-The C10 is smaller and cheaper, but the C22 adds a second ADC/DAC, a headphone output and 192 kHz support for ~$0.23 more, and the existing codec driver already targets it. The C10 stays documented as the mono cost-down path.
-
-### 2. Half-duplex PTT audio (one I²S)
-
-The G071 has a single I²S and the G0 HAL has no full-duplex mode. Sharing `I2S1_SD` between `DACIN` and `ADCOUT` and switching direction in software is the only way to get mic + speaker on this MCU without an external switch — and PTT is the natural mode for a voice radio node anyway.
-
-### 3. SPI2 for the radios, SPI1 for I²S
-
-On the G0 the only I²S is I²S1 (on SPI1), so the radios must move to SPI2. This is the main pin-map difference from the C0 (which uses SPI1 for both CC1101 sockets).
-
-### 4. CH340 USB-UART (no native USB)
-
-The STM32G071 has no USB FS peripheral (only UCPD), so USB data would need a bridge anyway. A CH340 on USART1 gives console + ROM-bootloader flashing with no extra MCU complexity; the USB-C connector therefore carries both power and the CH340 data link.
-
-### 5. 5 V speaker rail from VBUS
-
-The codec BTL driver only reaches 1 W into 8 Ω with a 5 V `VDDSPK`. Taking it from filtered VBUS (with bulk capacitance) avoids a boost converter and keeps the 3.3 V LDO cool.
-
-### 6. Separate 3.5 mm input and output jacks
-
-The NAU88C22 already has a stereo line input and a stereo headphone/line output, so two jacks cost only connectors and coupling capacitors — no extra silicon. It gives the G0 a line-level record path (music, radio, another device) and a private listening path, both selectable from the OLED menu. Input/output selection is done in codec registers, so no analog switches or jumpers are needed.
+1. NAU88C22YG Audio Codec: Stereo DAC, dual ADC paths, BTL speaker driver, and 3.5 mm headphone/line-in interfaces in a compact QFN-32 package.
+2. Half-duplex PTT Audio: Sharing PB5 (I2S1_SD) between DACIN and ADCOUT matches voice radio operational needs while conserving pins and peripherals.
+3. Dedicated SPI2 for Radios and SPI1 for Audio: Preserves full SPI bandwidth for Lyrion Link packets while I2S1 runs jitter-free audio streaming.
+4. Dynamic Power-Path with MT3608 + TLV75733: Stepping battery voltage to 5.0V feeds the TLV75733 with plenty of headroom, avoiding 3.3V logic droop and powering the speaker at full 1W volume in portable operation.
+5. LMS Smart Expansion Port: 1x7 header providing serial communications, power rails, chip select, and interrupt lines for high-speed companion coprocessors (ESP32, LoRa, GNSS).
 
 ---
 
 ## Status & Roadmap
 
 | Phase | Description | Status |
-|-------|-------------|--------|
-| 0 | Repo, docs, pin map, firmware skeleton | ✅ Done |
-| 1 | Schematic capture, clocking validation, EXTI conflict fix | ⏳ Planned |
-| 2 | PCB layout (2-layer, audio grounding, speaker connector) | ⏳ Planned |
-| 3 | Firmware bring-up (main.c, .ioc, clocks, UART, I²C, OLED, radios) | ⏳ Planned |
-| 4 | Audio bring-up (codec, beep, mic capture, PTT switching) | ⏳ Planned |
-| 5 | Lyrion Link Pro integration (protocol, AES-CCM, voice frames) | ⏳ Planned |
-| 6 | Enclosure with case-mounted 40 mm speaker | ⏳ Planned |
-| 7 | Field test: two G0 boards, PTT voice over 433 MHz | ⏳ Planned |
-
-See [`docs/PLAN.md`](docs/PLAN.md) for the detailed phase-by-phase plan.
-
----
-
-## Known Limitations & Open Questions
-
-- **`main.c` and `STM32_Lyrion_Core_G0.ioc` do not exist yet** — the firmware skeleton cannot build until Phase 3.
-- **EXTI conflict (fixed in skeleton):** BTN2 originally shared EXTI line 2 with GDO0_2 (PB2). BTN2 is now on **PA5** (EXTI line 5) in `main.h`/`g0_pinmap.h`; keep the CubeMX `.ioc` in sync when it is created.
-- **Clock tree unverified:** 12.288 MHz MCLK generation for the codec (PLL I²S as implemented vs HSE crystal option) must be validated in Phase 1.
-- **BOOT0 is on PA14** (shared with SWCLK) and **PF2 is NRST** on this package — the CH340 auto-download circuit must strap the correct pins.
-- **PB3 is I²S1_CK and also SWO** — SWD works, SWO tracing does not.
-- **M1 module pinout unverified:** confirm the physical connector against the `LyrionMIVTwo.zip` module archive before committing the footprint.
-- **Speaker output power** is 1 W (5 V) into the 8 Ω / 2 W speaker — fine for voice, not for loud playback.
-- **Line input is line-level:** the 3.5 mm input expects ~1 V<sub>RMS</sub>; mic-level sources need the codec PGA or an external preamp. A pad/attenuator footprint is reserved on the PCB.
-- **Audio routing menu is not implemented yet** — capture/playback source switching is planned for Phase 4/5 (`ENABLE_AUDIO_ROUTING`).
-- **License headers:** driver files carry MIT SPDX headers while the repo is GPL-3.0; align before release.
-- **2-layer audio layout** requires care (solid ground plane, short analog traces, separated digital return) — no dedicated analog layer on Rev A.
+|---|---|---|
+| 0 | Architecture & pin assignment freeze, docs, firmware skeleton | Completed |
+| 1 | Schematic capture in KiCad (IP2312, MT3608, NAU88C22, STM32G071) | In Progress |
+| 2 | PCB layout (2-layer, solid ground return, filtered audio power) | Planned |
+| 3 | Firmware bring-up (main.c, .ioc, clocks, UART, I2C, OLED, radios) | Planned |
+| 4 | Audio bring-up (codec driver, beep, mic capture, PTT switching) | Planned |
+| 5 | Lyrion Link Pro integration (protocol, AES-CCM, voice frames) | Planned |
+| 6 | Enclosure design with 40 mm speaker gasket and battery bay | Planned |
+| 7 | Field test: two G0 boards, PTT voice over 433 MHz | Planned |
 
 ---
 
