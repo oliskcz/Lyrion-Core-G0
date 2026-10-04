@@ -21,7 +21,9 @@
 /* ===== Audio (NAU88C22YG codec + I2S1) ===== */
 #define ENABLE_AUDIO   1   /* audio codec + I2S driver */
 #define ENABLE_CODEC   1   /* NAU88C22 codec driver */
-#define ENABLE_HP_JACK 1   /* headphone / line output on the 3.5 mm jack */
+#define ENABLE_HP_JACK 1   /* headphone / line output on the 3.5 mm J_OUT jack */
+#define ENABLE_LINE_IN 1   /* 3.5 mm line-in jack (codec LLIN/RLIN input path) */
+#define ENABLE_AUDIO_ROUTING 0 /* 1 = OLED menu to pick input/output source (planned) */
 #define AUDIO_SAMPLE_RATE_HZ 48000
 #define AUDIO_MCLK_HZ       12288000  /* 256 x 48000, generated from PLL I2S */
 

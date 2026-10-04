@@ -109,7 +109,9 @@ SWD   : 1=+3V3 2=SWDIO 3=SWCLK 4=NRST 5=GND
 UART  : 1=+3V3 2=TX(USART1_TX) 3=RX(USART1_RX) 4=GND
 SPK   : 1=SPK+ (codec BTL+) 2=SPK- (codec BTL-)
 USB-C : VBUS, GND, CC1/CC2 via 5.1k to GND, D+/D- to CH340
-HP    : 3.5 mm stereo jack on codec HPOUT
+J_OUT : 3.5 mm stereo out: tip=L -> codec LHP, ring=R -> codec RHP, sleeve=GND
+J_IN  : 3.5 mm stereo in : tip=L -> C -> codec LLIN, ring=R -> C -> codec RLIN,
+        sleeve=GND (line level ~1 Vrms; optional pad footprint)
 
 AUDIO NETS (NAU88C22)
 ---------------------
@@ -118,8 +120,11 @@ BCLK   : MCU PB3  <-> codec BCLK
 FS     : MCU PB0  <-> codec LRC/FS
 SD     : MCU PB5  <-> codec DACIN + ADCOUT (one driver at a time)
 MIC    : MICBIAS -> 2.2k -> mic +; mic - -> GND; AC-coupled to MIC1+/MIC1-
+LINE   : J_IN tip/ring -> AC coupling -> codec LLIN/RLIN (input mixer selects mic vs line)
 SPK    : codec LSPKOUT/RSPKOUT -> J_SPK (BTL)
-HP     : codec HPOUTL/HPOUTR -> 3.5 mm jack
+OUT    : codec LHP/RHP -> J_OUT (3.5 mm stereo, headphone/line-out)
+ROUTING: software only (codec registers); no analog switches - planned OLED menu
+         selects input source (mic / line-in) and output source (speaker / J_OUT)
 
 POWER NETS
 ----------

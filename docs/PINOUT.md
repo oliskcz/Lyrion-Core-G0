@@ -131,7 +131,8 @@
 | UART (optional) | 3V3, TX, RX, GND | Mirrors CH340 / USART1 |
 | Speaker | SPK+, SPK− | BTL output, 2-pin |
 | USB-C | VBUS, GND, CC1/CC2 (5.1 kΩ), D+/D− → CH340 | Power + serial |
-| Headphone | Tip/Ring/Sleeve | 3.5 mm stereo jack |
+| Audio out — J_OUT | Tip = L → `LHP`, Ring = R → `RHP`, Sleeve = GND | 3.5 mm stereo jack (headphone/line-out) |
+| Audio in — J_IN | Tip = L → `LLIN`, Ring = R → `RLIN` (AC-coupled), Sleeve = GND | 3.5 mm stereo jack (line-in, ~1 V<sub>RMS</sub>) |
 
 ## 4. Conflicts and constraints
 
@@ -140,6 +141,8 @@
 3. **I2S1_SD (PB5)** is driven by either the MCU or the codec depending on `audio_set_mode()` — never both.
 4. **SPI2 is shared** by J1 and J3; firmware must raise only one CS at a time.
 5. **PB14 must be readable as GPIO** for the CC1101 CHIP_RDYn poll before the first SPI byte.
+6. **`LLIN`/`RLIN` (codec pins 3/6) are shared with the alternate `MICP`/`RMICP` inputs** — the input mixer register selects mic vs line; the 3.5 mm input jack is permanently wired to the line pins.
+7. **No analog switch between jacks and codec:** input/output routing is codec-register only (planned OLED menu).
 
 ## 5. I²C address map
 

@@ -44,8 +44,9 @@ LCSC part: **C529343** (~$2.5–3.9 @ 1, in stock — UNVERIFIED pricing).
 | ADC / DAC | 2 / 2, 24-bit, 8–192 kHz |
 | ADC SNR / DAC SNR | ~90 dB / ~94 dB |
 | Mic path | 2 differential inputs, PGA −12…+35.25 dB, MICBIAS |
+| Line input | Stereo `LLIN`/`RLIN` (pins 3/6, shared with alternate `MICP`/`RMICP`) |
 | Speaker driver | BTL, 1 W into 8 Ω @ 5 V (≈0.4 W @ 3.3 V) |
-| Headphone driver | 40 mW into 16 Ω @ 3.3 V |
+| Headphone/line driver | 40 mW into 16 Ω @ 3.3 V (`LHP`/`RHP`, pins 29/30) |
 | Control | I²C @ 0x1A (7-bit, CSB/GPIO1 = 0) |
 | Digital audio | I²S/PCM, slave or master |
 | MCLK | 12.288 MHz for 48 kHz (256 × fs) |
@@ -90,9 +91,16 @@ LCSC part: **C529343** (~$2.5–3.9 @ 1, in stock — UNVERIFIED pricing).
 | Mounting | Case-mounted, 2-pin connector |
 | Enclosure | Small sealed/lightly vented chamber; gasket recommended (UNVERIFIED) |
 
-### 3.5 Headphone
+### 3.5 Audio jacks (J_IN / J_OUT)
 
-3.5 mm stereo jack on the codec headphone output (`ENABLE_HP_JACK`), 40 mW into 16 Ω.
+| Jack | Wiring | Codec pins | Purpose |
+|------|--------|-----------|---------|
+| **J_OUT** (output) | Tip = L, Ring = R, Sleeve = GND | `LHP` (30) / `RHP` (29) | Headphone / line-out, 40 mW into 16 Ω |
+| **J_IN** (input) | Tip = L, Ring = R, Sleeve = GND | `LLIN` (3) / `RLIN` (6) via AC coupling | Line-in ~1 V<sub>RMS</sub> FS (phone/PC/radio) |
+
+- Input selection (mic vs line) and output selection (speaker vs jack, or both) are codec register settings — no analog switch.
+- Optional jack-detect on a spare GPIO (PA6/PA7) — **not wired in Rev A**.
+- Mono TS plug on J_IN grounds the ring; capture falls back to the left channel (or summed mono).
 
 ## 4. Lyrion Link ports
 
@@ -117,6 +125,7 @@ LCSC part: **C529343** (~$2.5–3.9 @ 1, in stock — UNVERIFIED pricing).
 | BTN2 | EXTI | PA2 (**EXTI conflict — see §8**) |
 | LED1 / LED2 | GPIO | PC0 / PC1 |
 | WS2812B | TIM3_CH4 + DMA1 | PB1 |
+| Audio routing menu (planned) | OLED UI | — |
 
 ## 6. Power
 
@@ -141,6 +150,8 @@ Estimated 3V3 current: ~60 mA idle, ~200 mA with radios TX and WS2812B active. S
 2. **PB3 = I2S1_CK = SWO:** SWD works; SWO trace is unavailable.
 3. **VDDSPK source:** confirm filtered-VBUS approach vs dedicated 5 V boost (only matters for loud playback).
 4. **BOOT0 / auto-download circuit:** CH340 DTR/RTS → NRST/BOOT0 wiring to be drawn (UNVERIFIED).
+5. **Line-in level:** reserve a pad/attenuator footprint and verify PGA range for typical line sources; decide mono-plug handling (left-only vs summed) in firmware.
+6. **Jack detection:** optional spare-GPIO detect for J_IN/J_OUT — decide before layout.
 
 ## 9. Bill of materials (Rev A draft)
 
@@ -158,7 +169,7 @@ Estimated 3V3 current: ~60 mA idle, ~200 mA with radios TX and WS2812B active. S
 | 10 | WS2812B | RGB LED | TBD | |
 | 11 | 12.288 MHz crystal | Audio clock | TBD | UNVERIFIED |
 | 12 | USB-C receptacle | Power/data | TBD | 5.1 kΩ CC pulldowns |
-| 13 | 3.5 mm stereo jack | Headphone | TBD | |
+| 13 | 3.5 mm stereo jack ×2 | J_OUT output + J_IN line input | TBD | TRS; AC coupling caps on J_IN |
 | 14 | Tactile buttons ×2 | PTT + BTN2 | TBD | |
 | 15 | 2.54 mm headers/sockets | J1, J3, M1, SWD, UART | TBD | |
 | 16 | 2-pin speaker connector | Speaker | TBD | JST-XH class |
@@ -177,3 +188,5 @@ LCSC codes marked TBD must be selected at order time; the STM32/NAU88 codes were
 | 5 | VDDSPK rail (VBUS vs boost) | Speaker loudness |
 | 6 | Final board size / enclosure | PCB + case |
 | 7 | License header alignment (MIT vs GPL-3.0) | Release hygiene |
+| 8 | Line-in attenuation / mono-plug handling | Input level + capture |
+| 9 | Audio routing menu design (input/output source) | Firmware UI |

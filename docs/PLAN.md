@@ -30,7 +30,7 @@ This plan takes the G0 from repo to a working PTT voice node. Each phase has a d
 - [ ] Validate the **clock tree**: PLL I2S (implemented in the skeleton) vs 12.288 MHz HSE for the I2S1 kernel clock (bring up on a dev board first)
 - [ ] Confirm **M1 module connector** pinout from the Lyrion M1 module archive
 - [ ] Confirm **J1/J3 socket pin order** against the Core C0 schematic
-- [ ] Codec circuit: MICBIAS + 2.2 kΩ bias, AC coupling, differential MIC1±, BTL output filter, headphone jack
+- [ ] Codec circuit: MICBIAS + 2.2 kΩ bias, AC coupling, differential MIC1±, line-in jack AC coupling (`LLIN`/`RLIN` + optional pad), BTL output filter, output jack (`LHP`/`RHP`)
 - [ ] Power: USB-C (5.1 kΩ CC), CH340 auto-download (DTR/RTS → NRST/BOOT0), AP2112K-3.3, VDDSPK filter + bulk
 - [ ] Decide VDDSPK source (filtered VBUS vs 5 V boost)
 - [ ] BOM freeze with LCSC part numbers (STM32 C529343, NAU88C22YG C914209, …)
@@ -78,8 +78,10 @@ This plan takes the G0 from repo to a working PTT voice node. Each phase has a d
 **Deliverable:** working half-duplex voice path.
 
 - [ ] Codec probe + init (`nau88c22_init`) returns OK
-- [ ] Playback: `audio_beep()` audible on speaker and headphone
+- [ ] Playback: `audio_beep()` audible on speaker and 3.5 mm output
 - [ ] Capture: `audio_capture_start()` streams mic samples; verify level with PGA sweep
+- [ ] Line-in capture: 3.5 mm input records cleanly from a phone/PC; check level, clipping and mono-plug handling
+- [ ] Input/output routing: switch capture source (mic ↔ line-in) and output (speaker ↔ 3.5 mm, or both) via codec registers
 - [ ] `audio_set_mode()` switching: no bus contention on PB5, no pop (mute before path switch)
 - [ ] Measure output power into the 8 Ω speaker at 5 V VDDSPK (target ≈ 1 W)
 - [ ] Record/playback loop test at 48 kHz; check sample-rate accuracy (MCLK validation)
@@ -97,7 +99,7 @@ This plan takes the G0 from repo to a working PTT voice node. Each phase has a d
 - [ ] Lyrion Link packet/MAC/security stack over the Pro build (`LL_PRO_BUILD 1`)
 - [ ] AES-128-CCM with per-node keys; key provisioning flow
 - [ ] Voice framing: capture → compress/stream → radio TX (PTT), RX → playback
-- [ ] UI: OLED shows link state, RSSI, node address; PTT button drives mode
+- [ ] UI: OLED shows link state, RSSI, node address; PTT button drives mode; audio routing menu (input source, output source, volume)
 - [ ] Range test at 433 MHz, indoor/outdoor
 
 **Verification:** two boards, PTT voice, AES on, 100+ packets without drop; range logged.
@@ -148,3 +150,4 @@ This plan takes the G0 from repo to a working PTT voice node. Each phase has a d
 | Codec BTL too quiet at 3.3 V | VDDSPK from 5 V VBUS; optional boost in Rev B |
 | M1 module pinout mismatch | Freeze connector after checking module archive |
 | 2-layer audio noise | Short analog traces, star ground, shielded mic wiring |
+| Line-in level mismatch (clipping / too quiet) | Pad footprint + PGA range; verify in Phase 4 |
