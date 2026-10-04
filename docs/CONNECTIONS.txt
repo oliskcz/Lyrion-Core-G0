@@ -1,147 +1,93 @@
 LYRION CORE G0 - MASTER NET LIST
 ================================
 Updated : 2026-10-04
-Board   : Lyrion Core G0 Rev A (planning)
+Board   : Lyrion Core G0 Rev A (planning freeze)
 MCU     : STM32G071CBU6, UFQFPN-48
 Sources : Core/Inc/g0_pinmap.h, docs/PINOUT.md
-Status  : PLANNING - physical pin numbers and connector pin ORDER are not
-          yet frozen; verify against the Core C0 schematic and the Lyrion M1
-          module archive before PCB layout.
 
 NET NAMING RULES
 ----------------
-- MCU peripheral nets use the peripheral name:  I2S1_*, SPI2_*, I2C1_*,
-  USART1_*, USART3_*, SWD_*
-- Module port nets use the port prefix:  J1_*, J3_*, M1_*
-- Power nets: VBUS, +3V3, VDDSPK, GND, AGND
+- MCU peripheral nets use the peripheral name: I2S1_*, SPI2_*, I2C1_*, I2C2_*, USART1_*, USART2_*, USART3_*, SWD_*
+- Module port nets use the port prefix: LL1_*, LL2_*, LMS_*
+- Power nets: VBUS, 5V_SYS, +3V3, VBAT, VDDSPK, GND, AGND
 
 MCU PIN ASSIGNMENTS
 -------------------
 PORT PIN  NET          DIRECTION  DESTINATION / NOTES
-PA0       SPI2_SCK     I/O        J1 pin 3, J3 pin 3 (shared bus)
+PA0       SPI2_SCK     I/O        LL1 pin 3, LL2 pin 3, Spare SPI pin 3 (shared bus)
 PA1       PTTButton    IN         PTT button, EXTI line 1
-PA2       (free)       -          freed; BTN2 moved to PA5 (line 2 shared with PB2)
-PA3       (free)       -          EXTI line 3 is used by M1_IRQ (PC3)
-PA4       ADC1_IN4     IN         spare analog input (also DAC_OUT1)
-PA5       BTN2         IN         BTN2 button, EXTI line 5
-PA6       (free)       -          -
-PA7       (free)       -          -
-PA8       CS1          OUT        J1 pin 6 (active low)
-PA9       USART1_TX    OUT        CH340 RXD
-PA10      USART1_RX    IN         CH340 TXD
-PA11      GDO0_1       IN         J1 pin 7, EXTI line 11
-PA12      GDO2_1       IN         J1 pin 8, EXTI line 12
-PA13      SWDIO        I/O        SWD header
-PA14      SWCLK        IN         SWD header; BOOT0 strap sampled at reset (shared pin)
-PA15      (free)       -          -
-PB0       I2S1_WS      I/O        NAU88C22 FS/LRC
+PA2       USART2_TX    OUT        Spare UART TX header
+PA3       USART2_RX    IN         Spare UART RX header
+PA4       DAC1_OUT1    ANALOG     ADC/DAC header pin 1
+PA5       DAC1_OUT2    ANALOG     ADC/DAC header pin 2
+PA6       ADC1_IN6     ANALOG     ADC/DAC header pin 3
+PA7       ADC1_IN7     ANALOG     ADC/DAC header pin 4
+PA8       CS1          OUT        LL1 chip select (active low)
+PA9       USART1_TX    OUT        CH340C RXD
+PA10      USART1_RX    IN         CH340C TXD
+PA11      GDO0_1       IN         LL1 packet IRQ, EXTI line 11
+PA12      GDO2_1       IN         LL1 sync / channel status
+PA13      SWDIO        I/O        SWD header pin 2
+PA14      SWCLK        IN         SWD header pin 3; BOOT0 strap sampled at reset
+PA15      BTN_OK       IN         OLED menu OK button, EXTI line 15
+
+PB0       I2S1_WS      I/O        NAU88C22YG FS/LRC
 PB1       WS2812B      OUT        WS2812B data, TIM3_CH4 + DMA1
-PB2       GDO0_2       IN         J3 pin 7, EXTI line 2   [CONFLICT - see below]
-PB3       I2S1_CK      I/O        NAU88C22 BCLK (also SWO - trace unavailable)
-PB4       I2S1_MCK     OUT        NAU88C22 MCLK, 12.288 MHz
-PB5       I2S1_SD      I/O        NAU88C22 DACIN + ADCOUT (half-duplex)
-PB6       I2C1_SCL     I/O        OLED, TMP102, NAU88C22
-PB7       I2C1_SDA     I/O        OLED, TMP102, NAU88C22
-PB8       (free)       -          -
-PB9       (free)       -          -
-PB10      GDO2_2       IN         J3 pin 8, EXTI line 10
-PB11      (free)       -          alternative GDO0_2 pin
-PB12      (free)       -          -
-PB13      (free)       -          -
-PB14      SPI2_MISO    IN         J1 pin 4, J3 pin 4 (shared bus)
-PB15      SPI2_MOSI    OUT        J1 pin 5, J3 pin 5 (shared bus)
-PC0       LED1         OUT        status LED
-PC1       LED2         OUT        status LED
-PC2       CS3          OUT        M1 pin 3 (active low)
-PC3       M1_IRQ       IN         M1 pin 4, EXTI line 3
-PC4       USART3_TX    OUT        M1 pin 5 (host -> module)
-PC5       USART3_RX    IN         M1 pin 6 (module -> host)
-PC6       CS2          OUT        J3 pin 6 (active low)
-PC7       (free)       -          -
-PC13      (free)       -          -
-PC14      (free)       -          -
-PC15      (free)       -          -
-PF0       HSE_IN       -          12.288 MHz crystal (UNVERIFIED)
-PF1       HSE_OUT      -          12.288 MHz crystal (UNVERIFIED)
-PF2       NRST         IN         reset pin (PF2 = NRST on STM32G071)
+PB2       GDO0_2       IN         LL2 packet IRQ, EXTI line 2
+PB3       I2S1_CK      I/O        NAU88C22YG BCLK
+PB4       I2S1_MCK     OUT        NAU88C22YG MCLK, 12.288 MHz
+PB5       I2S1_SD      I/O        NAU88C22YG DACIN + ADCOUT (half-duplex)
+PB6       I2C1_SCL     I/O        OLED, TMP102, NAU88C22YG
+PB7       I2C1_SDA     I/O        OLED, TMP102, NAU88C22YG
+PB8       BTN_UP       IN         OLED menu Up button, EXTI line 8
+PB9       BTN_DOWN     IN         OLED menu Down button, EXTI line 9
+PB10      GDO2_2       IN         LL2 sync / channel status
+PB11      I2C2_SDA     I/O        Spare I2C SDA header
+PB12      VBAT_SENSE   ANALOG     Battery 2:1 resistive divider (ADC1_IN16)
+PB13      I2C2_SCL     I/O        Spare I2C SCL header
+PB14      SPI2_MISO    IN         LL1 pin 4, LL2 pin 4, Spare SPI pin 4 (shared bus)
+PB15      SPI2_MOSI    OUT        LL1 pin 5, LL2 pin 5, Spare SPI pin 5 (shared bus)
 
-CONNECTOR J1 - RAW CC1101 SOCKET (radio 1)
-------------------------------------------
-PIN  SIGNAL       NET
-1    VCC 3V3      +3V3
-2    GND          GND
-3    SCK          SPI2_SCK
-4    MISO (SO)    SPI2_MISO
-5    MOSI (SI)    SPI2_MOSI
-6    CSN          CS1
-7    GDO0         GDO0_1
-8    GDO2         GDO2_1
-NOTE: pin order must match Core C0 J1 (verify against C0 schematic).
+PC0       LED1         OUT        Discrete status LED 1
+PC1       LED2         OUT        Discrete status LED 2
+PC2       LMS_CS       OUT        LMS port pin 6 (active low)
+PC3       LMS_IRQ      IN         LMS port pin 7, EXTI line 3
+PC4       USART3_TX    OUT        LMS port pin 4 (host -> module)
+PC5       USART3_RX    IN         LMS port pin 5 (module -> host)
+PC6       CS2          OUT        LL2 chip select (active low)
+PC7       JACK_IN_DET  IN         Switched 3.5 mm line-in jack detect (low when plugged)
+PC13      JACK_OUT_DET IN         Switched 3.5 mm line-out jack detect (low when plugged)
+PC14      BTN_BACK     IN         OLED menu Back button, EXTI line 14
+PC15      CS_SPARE     OUT        Spare SPI header chip select (active low)
 
-CONNECTOR J3 - RAW CC1101 SOCKET (radio 2)
-------------------------------------------
-PIN  SIGNAL       NET
-1    VCC 3V3      +3V3
-2    GND          GND
-3    SCK          SPI2_SCK      (shared)
-4    MISO (SO)    SPI2_MISO     (shared)
-5    MOSI (SI)    SPI2_MOSI     (shared)
-6    CSN          CS2
-7    GDO0         GDO0_2
-8    GDO2         GDO2_2
-NOTE: pin order must match Core C0 J3 (verify against C0 schematic).
+PF0       HSE_IN       IN         12.288 MHz audio crystal
+PF1       HSE_OUT      OUT        12.288 MHz audio crystal
+PF2       NRST         IN         Reset pin to SWD header pin 4
 
-CONNECTOR M1 - SMART MODULE PORT
---------------------------------
-PIN  SIGNAL            NET
-1    VCC 3V3           +3V3
-2    GND               GND
-3    CS                CS3
-4    IRQ               M1_IRQ
-5    UART TX (host->)  USART3_TX
-6    UART RX (->host)  USART3_RX
-NOTE: verify against LyrionMIVTwo.zip before layout.
+CONNECTORS & HEADERS
+--------------------
+LL1 (Lyrion Link 1)  : 1=+3V3 2=GND 3=SCK(PA0) 4=MISO(PB14) 5=MOSI(PB15) 6=CS1(PA8) 7=GDO0_1(PA11) 8=GDO2_1(PA12)
+LL2 (Lyrion Link 2)  : 1=+3V3 2=GND 3=SCK(PA0) 4=MISO(PB14) 5=MOSI(PB15) 6=CS2(PC6) 7=GDO0_2(PB2) 8=GDO2_2(PB10)
+LMS (Lyrion Smart)   : 1=5V 2=+3V3 3=GND 4=TX(PC4) 5=RX(PC5) 6=CS(PC2) 7=IRQ(PC3)
+OLED (1x4)           : 1=+3V3 2=GND 3=SCL(PB6) 4=SDA(PB7)
+SWD (1x5)            : 1=+3V3 2=SWDIO(PA13) 3=SWCLK(PA14) 4=NRST(PF2) 5=GND
+Spare UART (1x4)     : 1=+3V3 2=TX(PA2) 3=RX(PA3) 4=GND
+Spare I2C (1x4)      : 1=+3V3 2=SCL(PB13) 3=SDA(PB11) 4=GND
+Spare SPI (1x6)      : 1=+3V3 2=GND 3=SCK(PA0) 4=MISO(PB14) 5=MOSI(PB15) 6=CS(PC15)
+ADC / DAC (1x4)      : 1=DAC1(PA4) 2=DAC2(PA5) 3=ADC1(PA6) 4=ADC2(PA7)
+SPK (JST-XH 1x2)     : 1=SPK+ (codec BTL+) 2=SPK- (codec BTL-)
+J_IN (3.5 mm TRS)    : Tip=L, Ring=R via AC caps to LLIN/RLIN; Switch=PC7
+J_OUT (3.5 mm TRS)   : Tip=LHP, Ring=RHP; Switch=PC13
 
-OTHER CONNECTORS
-----------------
-OLED  : 1=VCC(+3V3) 2=GND 3=SCL(I2C1_SCL) 4=SDA(I2C1_SDA)
-SWD   : 1=+3V3 2=SWDIO 3=SWCLK 4=NRST 5=GND
-UART  : 1=+3V3 2=TX(USART1_TX) 3=RX(USART1_RX) 4=GND
-SPK   : 1=SPK+ (codec BTL+) 2=SPK- (codec BTL-)
-USB-C : VBUS, GND, CC1/CC2 via 5.1k to GND, D+/D- to CH340
-J_OUT : 3.5 mm stereo out: tip=L -> codec LHP, ring=R -> codec RHP, sleeve=GND
-J_IN  : 3.5 mm stereo in : tip=L -> C -> codec LLIN, ring=R -> C -> codec RLIN,
-        sleeve=GND (line level ~1 Vrms; optional pad footprint)
-
-AUDIO NETS (NAU88C22)
----------------------
-MCLK   : MCU PB4  -> codec MCLK
-BCLK   : MCU PB3  <-> codec BCLK
-FS     : MCU PB0  <-> codec LRC/FS
-SD     : MCU PB5  <-> codec DACIN + ADCOUT (one driver at a time)
-MIC    : MICBIAS -> 2.2k -> mic +; mic - -> GND; AC-coupled to MIC1+/MIC1-
-LINE   : J_IN tip/ring -> AC coupling -> codec LLIN/RLIN (input mixer selects mic vs line)
-SPK    : codec LSPKOUT/RSPKOUT -> J_SPK (BTL)
-OUT    : codec LHP/RHP -> J_OUT (3.5 mm stereo, headphone/line-out)
-ROUTING: software only (codec registers); no analog switches - planned OLED menu
-         selects input source (mic / line-in) and output source (speaker / J_OUT)
-
-POWER NETS
-----------
-VBUS   : USB-C VBUS -> AP2112K IN, VDDSPK filter + 470uF bulk
-+3V3   : AP2112K OUT -> MCU, codec AVDD/DVDD, OLED, TMP102, J1/J3/M1, WS2812B
-VDDSPK : filtered VBUS -> codec speaker supply
-AGND   : analog ground (codec, mic) star-connected to GND at the codec
-
-I2C ADDRESSES
--------------
-0x3C  SSD1306 OLED
-0x49  TMP102
-0x1A  NAU88C22 codec
-
-EXTI LINE 2 - RESOLVED
-----------------------
-PA2 (BTN2) and PB2 (GDO0_2) originally both selected EXTI line 2. BTN2 is
-now on PA5 (EXTI line 5) in main.h and g0_pinmap.h. Note: PA3 is line 3
-(M1_IRQ / PC3) and PB11 is line 11 (GDO0_1 / PA11), so neither was a valid
-alternative. Keep the CubeMX .ioc in sync once it exists.
+POWER ARCHITECTURE
+------------------
+USB-C       : 5V input, 5.1k pulldowns on CC1/CC2
+Charger     : IP2312-4V35 buck charger with solder bridges (1A/1.5A/3A) and NTC thermistor
+Protection  : XB5352A monolithic 1S LiPo protection (2.8V cutoff, 4.28V overcharge, short clamp)
+Boost       : MT3608 1.2 MHz boost converter (steps VBAT to 5.0V on battery mode)
+Power-Path  : USB 5V turns on NPN to disable MT3608 EN pin during USB connection.
+              5V_SYS net runs from USB 5V (via Schottky) when plugged in, and MT3608 when on battery.
+LDO         : TLV75733PDBVR (fed by 5V_SYS, regulates rock-solid +3.3V)
+Speaker Rail: VDDSPK fed by 5V_SYS (full 1W audio on battery and USB)
+WS2812B     : Powered by 5V_SYS
+Fuel Gauge  : 2x 100k precision divider from VBAT into PB12 (ADC1_IN16)

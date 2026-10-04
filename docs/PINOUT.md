@@ -1,10 +1,10 @@
 # Lyrion Core G0 — Pinout
 
-**Board:** Lyrion Core G0 Rev A (planning)
-**MCU:** STM32G071CBU6 (UFQFPN-48)
-**Source of truth:** [`Core/Inc/g0_pinmap.h`](../Core/Inc/g0_pinmap.h) — this document mirrors it; update both together.
+Board: Lyrion Core G0 Rev A (planning)
+MCU: STM32G071CBU6 (UFQFPN-48)
+Source of truth: [Core/Inc/g0_pinmap.h](../Core/Inc/g0_pinmap.h) — this document mirrors it; update both together.
 
-> Physical package pin numbers are intentionally omitted (UFQFPN-48 numbering to be taken from the STM32G071 datasheet during schematic capture).
+Physical package pin numbers are intentionally omitted (UFQFPN-48 numbering to be taken from the STM32G071 datasheet during schematic capture).
 
 ---
 
@@ -13,141 +13,112 @@
 ### Port A
 
 | Pin | Net | Peripheral / function | Direction | Notes |
-|-----|-----|----------------------|-----------|-------|
-| PA0 | SPI2_SCK | SPI2 clock | I/O | Shared by J1 + J3 |
-| PA1 | PTTButton | GPIO EXTI (line 1) | Input | Push-to-talk, `EXTI0_1_IRQn` |
-| PA2 | — | Free | — | Freed when BTN2 moved to PA5 (line 2 is shared with GDO0_2/PB2) |
-| PA3 | — | Free | — | Do not use for EXTI — line 3 is used by M1_IRQ (PC3) |
-| PA4 | ADC1_IN4 | ADC (spare) | Analog | Spare analog input, also DAC_OUT1; not used by the application |
-| PA5 | BTN2 | GPIO EXTI (line 5) | Input | Second user button, `EXTI4_15_IRQn` |
-| PA6–PA7 | — | Free | — | SPI1/I2S1 alternates unused |
-| PA8 | CS1 | GPIO output | Output | J1 chip select (active low) |
-| PA9 | USART1_TX | USART1 TX | Output | CH340 RX |
-| PA10 | USART1_RX | USART1 RX | Input | CH340 TX |
-| PA11 | GDO0_1 | GPIO EXTI (line 11) | Input | J1 CC1101 RX-done / IRQ |
-| PA12 | GDO2_1 | GPIO EXTI (line 12) | Input | J1 CC1101 sync / TX-done |
-| PA13 | SWDIO | SWD | I/O | Debug |
-| PA14 | SWCLK / BOOT0 | SWD / boot strap | Input | Debug; BOOT0 is sampled at reset on this shared pin |
-| PA15 | — | Free | — | JTDI (SWD-only ok) |
+|---|---|---|---|---|
+| PA0 | SPI2_SCK | SPI2 clock | I/O | Shared by LL1, LL2, Spare SPI |
+| PA1 | PTTButton | GPIO EXTI (line 1) | Input | Push-to-talk button, EXTI0_1_IRQn |
+| PA2 | USART2_TX | USART2 TX | Output | Spare UART header |
+| PA3 | USART2_RX | USART2 RX | Input | Spare UART header |
+| PA4 | DAC1_OUT1 | DAC1 output 1 | Analog | ADC / DAC header pin 1 |
+| PA5 | DAC1_OUT2 | DAC1 output 2 | Analog | ADC / DAC header pin 2 |
+| PA6 | ADC1_IN6 | ADC1 input channel 6 | Analog | ADC / DAC header pin 3 |
+| PA7 | ADC1_IN7 | ADC1 input channel 7 | Analog | ADC / DAC header pin 4 |
+| PA8 | CS1 | GPIO output | Output | LL1 chip select (active low) |
+| PA9 | USART1_TX | USART1 TX | Output | CH340C USB-UART bridge RX |
+| PA10 | USART1_RX | USART1 RX | Input | CH340C USB-UART bridge TX |
+| PA11 | GDO0_1 | GPIO EXTI (line 11) | Input | LL1 CC1101 RX-done / IRQ |
+| PA12 | GDO2_1 | GPIO input | Input | LL1 CC1101 sync / channel sense |
+| PA13 | SWDIO | SWD data | I/O | SWD programming header |
+| PA14 | SWCLK / BOOT0 | SWD clock / boot strap | Input | SWD programming header; BOOT0 sampled at reset |
+| PA15 | BTN_OK | GPIO EXTI (line 15) | Input | Menu OK / Select button |
 
 ### Port B
 
 | Pin | Net | Peripheral / function | Direction | Notes |
-|-----|-----|----------------------|-----------|-------|
-| PB0 | I2S1_WS | I2S1 word select | I/O | Codec FS/LRC |
-| PB1 | WS2812B | TIM3_CH4 + DMA1 | Output | RGB status LED |
-| PB2 | GDO0_2 | GPIO EXTI (line 2) | Input | J3 CC1101 RX-done — **conflicts with BTN2 (PA2)** |
-| PB3 | I2S1_CK | I2S1 bit clock | I/O | Also SWO — SWO trace unavailable |
-| PB4 | I2S1_MCK | I2S1 master clock | Output | 12.288 MHz to codec |
+|---|---|---|---|---|
+| PB0 | I2S1_WS | I2S1 word select | I/O | NAU88C22YG FS/LRC |
+| PB1 | WS2812B | TIM3_CH4 + DMA1 | Output | Addressable RGB status LED |
+| PB2 | GDO0_2 | GPIO EXTI (line 2) | Input | LL2 CC1101 RX-done / IRQ |
+| PB3 | I2S1_CK | I2S1 bit clock | I/O | NAU88C22YG BCLK |
+| PB4 | I2S1_MCK | I2S1 master clock | Output | 12.288 MHz clock to NAU88C22YG |
 | PB5 | I2S1_SD | I2S1 serial data | I/O | Shared DACIN (TX) / ADCOUT (RX), half-duplex |
-| PB6 | I2C1_SCL | I²C1 clock | I/O | OLED, TMP102, NAU88C22 |
-| PB7 | I2C1_SDA | I²C1 data | I/O | OLED, TMP102, NAU88C22 |
-| PB8 | — | Free | — | |
-| PB9 | — | Free | — | |
-| PB10 | GDO2_2 | GPIO EXTI (line 10) | Input | J3 CC1101 sync / TX-done |
-| PB11 | — | Free | — | Alternative GDO0_2 home |
-| PB12 | — | Free | — | |
-| PB13 | — | Free | — | |
-| PB14 | SPI2_MISO | SPI2 data in | Input | CC1101 SO / CHIP_RDYn poll |
-| PB15 | SPI2_MOSI | SPI2 data out | Output | CC1101 SI |
+| PB6 | I2C1_SCL | I2C1 clock | I/O | SSD1306 OLED, TMP102, NAU88C22YG |
+| PB7 | I2C1_SDA | I2C1 data | I/O | SSD1306 OLED, TMP102, NAU88C22YG |
+| PB8 | BTN_UP | GPIO EXTI (line 8) | Input | Menu Up button |
+| PB9 | BTN_DOWN | GPIO EXTI (line 9) | Input | Menu Down button |
+| PB10 | GDO2_2 | GPIO input | Input | LL2 CC1101 sync / channel sense |
+| PB11 | I2C2_SDA | I2C2 data | I/O | Spare I2C header |
+| PB12 | VBAT_SENSE | ADC1_IN16 | Analog | 2:1 resistive divider from battery |
+| PB13 | I2C2_SCL | I2C2 clock | I/O | Spare I2C header |
+| PB14 | SPI2_MISO | SPI2 data in | Input | Shared by LL1, LL2, Spare SPI |
+| PB15 | SPI2_MOSI | SPI2 data out | Output | Shared by LL1, LL2, Spare SPI |
 
 ### Port C / F
 
 | Pin | Net | Peripheral / function | Direction | Notes |
-|-----|-----|----------------------|-----------|-------|
-| PC0 | LED1 | GPIO output | Output | Status LED |
-| PC1 | LED2 | GPIO output | Output | Status LED |
-| PC2 | CS3 | GPIO output | Output | M1 port chip select |
-| PC3 | M1_IRQ | GPIO EXTI (line 3) | Input | M1 module interrupt — **shares `EXTI2_3_IRQn` with BTN2/GDO0_2 lines but is its own line 3** |
-| PC4 | USART3_TX | USART3 TX | Output | M1 module RX |
-| PC5 | USART3_RX | USART3 RX | Input | M1 module TX |
-| PC6 | CS2 | GPIO output | Output | J3 chip select |
-| PC7 | — | Free | — | |
-| PC13–PC15 | — | Free | — | |
-| PF0 / PF1 | HSE_IN / HSE_OUT | HSE crystal | — | 12.288 MHz audio crystal (UNVERIFIED) |
-| PF2 | NRST | Reset | Input | PF2 = NRST on STM32G071; CH340 auto-download drives NRST + PA14/BOOT0 (UNVERIFIED) |
+|---|---|---|---|---|
+| PC0 | LED1 | GPIO output | Output | Discrete status LED 1 |
+| PC1 | LED2 | GPIO output | Output | Discrete status LED 2 |
+| PC2 | LMS_CS | GPIO output | Output | LMS port chip select (active low) |
+| PC3 | LMS_IRQ | GPIO EXTI (line 3) | Input | LMS port interrupt |
+| PC4 | USART3_TX | USART3 TX | Output | LMS port TX (host to module) |
+| PC5 | USART3_RX | USART3 RX | Input | LMS port RX (module to host) |
+| PC6 | CS2 | GPIO output | Output | LL2 chip select (active low) |
+| PC7 | JACK_IN_DET | GPIO input (pull-up) | Input | Switched line-in 3.5 mm jack detect (low = plugged) |
+| PC13 | JACK_OUT_DET | GPIO input (pull-up) | Input | Switched line-out 3.5 mm jack detect (low = plugged) |
+| PC14 | BTN_BACK | GPIO EXTI (line 14) | Input | Menu Back / Cancel button |
+| PC15 | CS_SPARE | GPIO output | Output | Spare SPI header chip select |
+| PF0 | HSE_IN | Clock input | Input | 12.288 MHz audio crystal oscillator |
+| PF1 | HSE_OUT | Clock output | Output | 12.288 MHz audio crystal oscillator |
+| PF2 | NRST | Hardware reset | Input | Reset pin to SWD header |
 
-## 2. Peripheral map
+---
 
-| Peripheral | Pins | Purpose |
-|-----------|------|---------|
-| I2S1 | PB0 (WS), PB3 (CK), PB4 (MCK), PB5 (SD) | NAU88C22 codec, half-duplex |
-| I2C1 | PB6 (SCL), PB7 (SDA) | OLED 0x3C, TMP102 0x49, codec 0x1A |
-| SPI2 | PA0 (SCK), PB14 (MISO), PB15 (MOSI) | J1 + J3 CC1101 sockets |
-| USART1 | PA9 (TX), PA10 (RX) | CH340 console + ROM bootloader |
-| USART3 | PC4 (TX), PC5 (RX) | M1 module port |
-| TIM3_CH4 + DMA1 | PB1 | WS2812B |
-| EXTI | PA1, PA2, PC3, PA11, PA12, PB2, PB10 | Buttons + radio GDO + M1 IRQ |
+## 2. Connectors & Headers
 
-## 3. Connectors
+### LL1 — Lyrion Link Socket 1 (Radio 1)
+* 1: 3V3
+* 2: GND
+* 3: SCK (PA0)
+* 4: MISO (PB14)
+* 5: MOSI (PB15)
+* 6: CS1 (PA8)
+* 7: GDO0_1 (PA11)
+* 8: GDO2_1 (PA12)
 
-### J1 — raw CC1101 socket (J1 module)
+### LL2 — Lyrion Link Socket 2 (Radio 2)
+* 1: 3V3
+* 2: GND
+* 3: SCK (PA0, shared)
+* 4: MISO (PB14, shared)
+* 5: MOSI (PB15, shared)
+* 6: CS2 (PC6)
+* 7: GDO0_2 (PB2)
+* 8: GDO2_2 (PB10)
 
-| Pin | Signal | MCU |
-|-----|--------|-----|
-| 1 | VCC 3V3 | 3V3 rail |
-| 2 | GND | GND |
-| 3 | SCK | PA0 |
-| 4 | MISO (SO) | PB14 |
-| 5 | MOSI (SI) | PB15 |
-| 6 | CSN | PA8 |
-| 7 | GDO0 | PA11 |
-| 8 | GDO2 | PA12 |
+### LMS — Lyrion Smart Port (1x7 2.54 mm)
+* 1: 5V (USB VBUS or boosted 5V rail)
+* 2: 3.3V (system logic rail)
+* 3: GND
+* 4: TX (USART3_TX, PC4)
+* 5: RX (USART3_RX, PC5)
+* 6: CS / GPIO (PC2)
+* 7: IRQ (PC3, EXTI line 3)
 
-### J3 — raw CC1101 socket (J3 module)
+### OLED Display Header (1x4 2.54 mm)
+* 1: VCC (+3.3V)
+* 2: GND
+* 3: SCL (I2C1_SCL, PB6)
+* 4: SDA (I2C1_SDA, PB7)
 
-| Pin | Signal | MCU |
-|-----|--------|-----|
-| 1 | VCC 3V3 | 3V3 rail |
-| 2 | GND | GND |
-| 3 | SCK | PA0 (shared) |
-| 4 | MISO (SO) | PB14 (shared) |
-| 5 | MOSI (SI) | PB15 (shared) |
-| 6 | CSN | PC6 |
-| 7 | GDO0 | PB2 |
-| 8 | GDO2 | PB10 |
+### SWD Programming Header (1x5 2.54 mm)
+* 1: +3.3V
+* 2: SWDIO (PA13)
+* 3: SWCLK (PA14)
+* 4: NRST (PF2)
+* 5: GND
 
-> **UNVERIFIED:** physical pin order must match the Core C0 J1/J3 sockets (copy from the C0 Altium schematic) so existing modules plug in unchanged.
-
-### M1 — smart module port
-
-| Pin | Signal | MCU |
-|-----|--------|-----|
-| 1 | VCC 3V3 | 3V3 rail |
-| 2 | GND | GND |
-| 3 | CS | PC2 |
-| 4 | IRQ | PC3 |
-| 5 | UART TX (host → module) | PC4 |
-| 6 | UART RX (module → host) | PC5 |
-
-> **UNVERIFIED:** confirm against the Lyrion M1 module archive (`LyrionMIVTwo.zip`) before layout.
-
-### Other headers
-
-| Connector | Pins | Notes |
-|-----------|------|-------|
-| OLED | VCC, GND, SCL, SDA | 4-pin I²C module header |
-| SWD | 3V3, SWDIO, SWCLK, NRST, GND | 5-pin debug header |
-| UART (optional) | 3V3, TX, RX, GND | Mirrors CH340 / USART1 |
-| Speaker | SPK+, SPK− | BTL output, 2-pin |
-| USB-C | VBUS, GND, CC1/CC2 (5.1 kΩ), D+/D− → CH340 | Power + serial |
-| Audio out — J_OUT | Tip = L → `LHP`, Ring = R → `RHP`, Sleeve = GND | 3.5 mm stereo jack (headphone/line-out) |
-| Audio in — J_IN | Tip = L → `LLIN`, Ring = R → `RLIN` (AC-coupled), Sleeve = GND | 3.5 mm stereo jack (line-in, ~1 V<sub>RMS</sub>) |
-
-## 4. Conflicts and constraints
-
-1. **EXTI line 2 (resolved):** EXTI lines follow the pin number, so PA2 (BTN2) and PB2 (GDO0_2) originally shared line 2. BTN2 is now on **PA5** (line 5) in `main.h`/`g0_pinmap.h`; PA3 (line 3) is taken by M1_IRQ and PB11 (line 11) by GDO0_1, so neither was a valid alternative. Keep the CubeMX `.ioc` in sync.
-2. **PB3 (I2S1_CK)** is the SWO pin — SWD debugging works, SWO tracing is unavailable.
-3. **I2S1_SD (PB5)** is driven by either the MCU or the codec depending on `audio_set_mode()` — never both.
-4. **SPI2 is shared** by J1 and J3; firmware must raise only one CS at a time.
-5. **PB14 must be readable as GPIO** for the CC1101 CHIP_RDYn poll before the first SPI byte.
-6. **`LLIN`/`RLIN` (codec pins 3/6) are shared with the alternate `MICP`/`RMICP` inputs** — the input mixer register selects mic vs line; the 3.5 mm input jack is permanently wired to the line pins.
-7. **No analog switch between jacks and codec:** input/output routing is codec-register only (planned OLED menu).
-
-## 5. I²C address map
-
-| Device | Address (7-bit) |
-|--------|-----------------|
-| SSD1306 OLED | 0x3C |
-| TMP102 | 0x49 |
-| NAU88C22 codec | 0x1A |
+### Spare Expansion Headers
+* Spare UART (1x4): 1=+3V3, 2=TX (PA2, USART2), 3=RX (PA3, USART2), 4=GND
+* Spare I2C (1x4): 1=+3V3, 2=SCL (PB13, I2C2), 3=SDA (PB11, I2C2), 4=GND
+* Spare SPI (1x6): 1=+3V3, 2=GND, 3=SCK (PA0), 4=MISO (PB14), 5=MOSI (PB15), 6=CS (PC15)
+* ADC / DAC (1x4): 1=DAC1 (PA4), 2=DAC2 (PA5), 3=ADC1 (PA6), 4=ADC2 (PA7)

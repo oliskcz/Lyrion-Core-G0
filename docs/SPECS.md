@@ -1,192 +1,79 @@
 # Lyrion Core G0 — Specifications
 
-**Board:** Lyrion Core G0, Rev A (planning)
-**Date:** 2026-10-04
-**Status:** Planning — schematic not captured yet
-**MCU:** STM32G071CBU6 (UFQFPN-48)
-**Related:** [README](../README.md) · [PINOUT](PINOUT.md) · [PLAN](PLAN.md) · [CONNECTIONS](CONNECTIONS.txt)
-
-> Items marked **UNVERIFIED** are engineering assumptions that must be confirmed during Phase 1 (schematic capture) before the PCB is ordered.
+Board: Lyrion Core G0, Rev A (design freeze)
+Date: 2026-10-04
+Status: Specification frozen — schematic capture ready
+MCU: STM32G071CBU6 (UFQFPN-48)
+Related: [README](../README.md) · [PINOUT](PINOUT.md) · [PLAN](PLAN.md) · [CONNECTIONS](CONNECTIONS.txt)
 
 ---
 
 ## 1. Overview
 
-Lyrion Core G0 is the Pro-tier Lyrion Core board: an STM32G071 voice/audio node with a Nuvoton NAU88C22 codec, analog microphone, case-mounted speaker, OLED UI, and three Lyrion Link module ports (two raw CC1101 sockets plus one M1 smart-module port). It is the audio-capable counterpart to the [Lyrion Core C0](https://github.com/oliskcz/Lyrion-Core-C0).
+Lyrion Core G0 is the Pro-tier Lyrion Core board: an STM32G071 voice/audio node with a Nuvoton NAU88C22YG codec, analog differential microphone, case-mounted speaker, OLED UI with 4-button navigation, dual Lyrion Link CC1101 module sockets, LMS smart expansion port, expansion headers (UART, I2C, SPI, ADC/DAC), and integrated LiPo battery management with dynamic power-path.
 
 ## 2. MCU — STM32G071CBU6
 
 | Parameter | Value |
-|-----------|-------|
+|---|---|
 | Core | Arm Cortex-M0+ @ 64 MHz |
 | Flash / RAM | 128 KB / 36 KB (32 KB with parity) |
 | Package | UFQFPN-48, 7 × 7 mm, 44 GPIO |
 | Supply | 1.7 – 3.6 V |
-| I²S | **1 instance** (I2S1, on SPI1) — half-duplex only via HAL |
-| SPI | 2 (SPI1 = I2S1 audio, SPI2 = CC1101 radios J1/J3) |
-| I²C | 2 (FM+ up to 1 Mbit/s) |
-| USART / LPUART | 4 + 1 |
-| Timers | 14 (TIM1 advanced; TIM3 used for WS2812B) |
-| ADC | 17 × 12-bit channels |
-| DAC | 2 × 12-bit (unused on this board) |
-| USB | **None** (UCPD PHY only) — no USB FS device |
-| Oscillators | HSE 4–48 MHz, HSI16, LSI32 |
-| Debug | SWD (PA13/PA14) |
+| I2S | 1 instance (I2S1, on SPI1) — half-duplex PTT |
+| SPI | 2 (SPI1 = I2S1 audio, SPI2 = LL1, LL2, Spare SPI) |
+| I2C | 2 (I2C1 = OLED, TMP102, Codec; I2C2 = Spare I2C) |
+| USART / LPUART | 4 + 1 (USART1 = CH340C, USART2 = Spare UART, USART3 = LMS port) |
+| Timers | 14 (TIM3_CH4 for WS2812B RGB LED) |
+| ADC | 12-bit (ADC1_IN6/IN7 on header, ADC1_IN16 for battery gauge) |
+| DAC | 2 × 12-bit (DAC1_OUT1, DAC1_OUT2 on header) |
+| Debug | SWD (PA13/PA14) + NRST (PF2) |
 
-LCSC part: **C529343** (~$2.5–3.9 @ 1, in stock — UNVERIFIED pricing).
+## 3. Audio Subsystem
 
-## 3. Audio
+### 3.1 Codec — NAU88C22YG
+* Digital audio: I2S1 (PB0=WS, PB3=CK, PB4=MCK, PB5=SD). Half-duplex PTT.
+* Control: I2C1 @ 0x1A.
+* MCLK: 12.288 MHz generated from HSE crystal.
+* Playback: Codec BTL amplifier driving XHXDZ 40 mm 8-ohm 2W speaker (1W into 8 ohms at 5V VDDSPK).
+* Headphone Output: 3.5 mm switched TRS jack (J_OUT) with mechanical jack detect into PC13.
+* Microphone Input: INGHAi GMI9745P-30dB electret condenser mic wired differentially to MIC1P/MIC1N with 2.2k pull-up to MICBIAS.
+* Line Input: 3.5 mm switched TRS jack (J_IN) with mechanical jack detect into PC7 and AC-coupling caps into LLIN/RLIN.
 
-### 3.1 Codec — NAU88C22YG (Rev A)
+## 4. RF & Wireless Ports
 
-| Parameter | Value |
-|-----------|-------|
-| ADC / DAC | 2 / 2, 24-bit, 8–192 kHz |
-| ADC SNR / DAC SNR | ~90 dB / ~94 dB |
-| Mic path | 2 differential inputs, PGA −12…+35.25 dB, MICBIAS |
-| Line input | Stereo `LLIN`/`RLIN` (pins 3/6, shared with alternate `MICP`/`RMICP`) |
-| Speaker driver | BTL, 1 W into 8 Ω @ 5 V (≈0.4 W @ 3.3 V) |
-| Headphone/line driver | 40 mW into 16 Ω @ 3.3 V (`LHP`/`RHP`, pins 29/30) |
-| Control | I²C @ 0x1A (7-bit, CSB/GPIO1 = 0) |
-| Digital audio | I²S/PCM, slave or master |
-| MCLK | 12.288 MHz for 48 kHz (256 × fs) |
-| Package | QFN-32, 5 × 5 mm |
-| Supplies | AVDD 2.5–3.6 V, DVDD 1.65–3.6 V, VDDSPK up to 5 V |
-| LCSC | C914209 |
+* LL1 (Lyrion Link Socket 1): CC1101 module socket on SPI2 (PA0, PB14, PB15) + CS1 (PA8) + GDO0_1 (PA11, EXTI11) + GDO2_1 (PA12).
+* LL2 (Lyrion Link Socket 2): CC1101 module socket on SPI2 + CS2 (PC6) + GDO0_2 (PB2, EXTI2) + GDO2_2 (PB10).
+* LMS (Lyrion Smart Port standard): 1x7 2.54 mm header:
+  * Pin 1: 5V
+  * Pin 2: 3.3V
+  * Pin 3: GND
+  * Pin 4: TX (USART3_TX, PC4)
+  * Pin 5: RX (USART3_RX, PC5)
+  * Pin 6: CS / GPIO (PC2)
+  * Pin 7: IRQ (PC3, EXTI3)
 
-**Alternative (cost-down, mono):** NAU88C10YG — QFN-20 4 × 4 mm, 1 ADC + 1 DAC, same BTL driver and I²S/I²C interface, 8–48 kHz, LCSC C914208. Not footprint-compatible; would be a Rev B variant.
+## 5. UI & Expansion
 
-### 3.2 Digital audio interface (half-duplex)
+* 4-Button OLED Navigation: UP (PB8), DOWN (PB9), OK (PA15), BACK (PC14).
+* PTT Button: Tactile switch on PA1 (EXTI1).
+* Indicators: LED1 (PC0), LED2 (PC1), WS2812B RGB LED (PB1).
+* Display: 4-pin I2C header for SSD1306 0.96 inch or 1.3 inch OLED.
+* Sensor: Texas Instruments TMP102 temperature sensor on I2C1.
+* Spare UART: 4-pin header (3V3, TX=PA2, RX=PA3, GND).
+* Spare I2C: 4-pin header (3V3, SCL=PB13, SDA=PB11, GND).
+* Spare SPI: 6-pin header (3V3, GND, SCK=PA0, MISO=PB14, MOSI=PB15, CS=PC15).
+* ADC / DAC: 4-pin header (DAC1=PA4, DAC2=PA5, ADC1=PA6, ADC2=PA7).
 
-| Signal | MCU pin | Codec pin | Direction |
-|--------|---------|-----------|-----------|
-| MCLK | PB4 (I2S1_MCK) | MCLK | MCU → codec |
-| BCLK | PB3 (I2S1_CK) | BCLK | playback: MCU → codec; capture: codec → MCU |
-| FS / WS | PB0 (I2S1_WS) | LRC/FS | playback: MCU → codec; capture: codec → MCU |
-| SD | PB5 (I2S1_SD) | DACIN (playback) / ADCOUT (capture) | bidirectional, half-duplex |
+## 6. Power & Battery Management
 
-- Playback: MCU = I²S **master TX**, 48 kHz, DMA double-buffered.
-- Capture: MCU = I²S **slave RX**, codec drives BCLK/FS.
-- `I2S1_SD` is shared between `DACIN` and `ADCOUT`; the unused path is powered down by `nau88c22_select_path()` so exactly one side drives the net.
-
-### 3.3 Microphone
-
-| Parameter | Value |
-|-----------|-------|
-| Part | INGHAi GMI9745P-30dB |
-| Type | Electret condenser (ECM), through-hole |
-| Size | Ø 9.7 mm × 4.5 mm |
-| Sensitivity | −30 dB (0 dB = 1 V/Pa) |
-| Bias | Codec MICBIAS through 2.2 kΩ |
-| Input | Differential MIC1± via AC coupling |
-| Gain | Codec PGA, 0.5 dB/step |
-
-### 3.4 Speaker
-
-| Parameter | Value |
-|-----------|-------|
-| Part | XHXDZ 40 mm full-range |
-| Impedance / power | 8 Ω / 2 W rated |
-| Drive | Codec BTL output (1 W @ 5 V) |
-| Mounting | Case-mounted, 2-pin connector |
-| Enclosure | Small sealed/lightly vented chamber; gasket recommended (UNVERIFIED) |
-
-### 3.5 Audio jacks (J_IN / J_OUT)
-
-| Jack | Wiring | Codec pins | Purpose |
-|------|--------|-----------|---------|
-| **J_OUT** (output) | Tip = L, Ring = R, Sleeve = GND | `LHP` (30) / `RHP` (29) | Headphone / line-out, 40 mW into 16 Ω |
-| **J_IN** (input) | Tip = L, Ring = R, Sleeve = GND | `LLIN` (3) / `RLIN` (6) via AC coupling | Line-in ~1 V<sub>RMS</sub> FS (phone/PC/radio) |
-
-- Input selection (mic vs line) and output selection (speaker vs jack, or both) are codec register settings — no analog switch.
-- Optional jack-detect on a spare GPIO (PA6/PA7) — **not wired in Rev A**.
-- Mono TS plug on J_IN grounds the ring; capture falls back to the left channel (or summed mono).
-
-## 4. Lyrion Link ports
-
-| Port | Signals | Pins |
-|------|---------|------|
-| J1 (raw CC1101) | SCK/MISO/MOSI (SPI2, shared), CS1, GDO0_1, GDO2_1 | PA8, PA11, PA12 |
-| J3 (raw CC1101) | SCK/MISO/MOSI (SPI2, shared), CS2, GDO0_2, GDO2_2 | PC6, PB2, PB10 |
-| M1 (smart module) | USART3 TX/RX, CS3, IRQ | PC4, PC5, PC2, PC3 |
-
-- SPI2 bus: PA0 = SCK, PB14 = MISO, PB15 = MOSI (shared by J1 + J3).
-- No reset line on J1/J3 — CC1101 reset via SRES strobe (same as C0).
-- Connector type: 2.54 mm through-hole headers/sockets (UNVERIFIED pin order — copy from Core C0 J1/J3).
-- M1 physical pinout: confirm against the Lyrion M1 module archive before layout (**UNVERIFIED**).
-
-## 5. Display, sensors, UI
-
-| Item | Interface | Address / pin |
-|------|-----------|---------------|
-| SSD1306 OLED 0.96" 128×64 | I²C1 (PB6/PB7) | 0x3C |
-| TMP102 temperature | I²C1 | 0x49 |
-| PTT button | EXTI | PA1 |
-| BTN2 | EXTI | PA2 (**EXTI conflict — see §8**) |
-| LED1 / LED2 | GPIO | PC0 / PC1 |
-| WS2812B | TIM3_CH4 + DMA1 | PB1 |
-| Audio routing menu (planned) | OLED UI | — |
-
-## 6. Power
-
-| Rail | Source | Notes |
-|------|--------|-------|
-| VBUS 5 V | USB-C (5.1 kΩ CC pulldowns) | Power + CH340 USB 2.0 FS data |
-| 3V3 | AP2112K-3.3, 600 mA LDO | Digital + analog rail |
-| VDDSPK | Filtered VBUS + bulk 470 µF | Codec BTL only |
-
-Estimated 3V3 current: ~60 mA idle, ~200 mA with radios TX and WS2812B active. Speaker peaks are drawn from VBUS.
-
-## 7. Clocking (UNVERIFIED)
-
-- Implemented in the skeleton: I2S1 kernel clock from the **PLL** (`RCC_I2S1CLKSOURCE_PLL` in `stm32g0xx_hal_msp.c`), targeting MCLK = 12.288 MHz at 48 kHz.
-- Alternative to evaluate in Phase 1: **12.288 MHz audio-grade HSE crystal** as the I2S1 kernel clock source (MCU core from HSI16 PLL at 64 MHz) for exact MCLK accuracy.
-- Codec PLL expects MCLK = 256 × fs (12.288 MHz at 48 kHz).
-- The PLL divider chain must be validated so playback is exactly 48.000 kHz.
-
-## 8. Known electrical issues to resolve before layout
-
-1. **EXTI line 2 conflict (resolved in skeleton):** EXTI lines follow the pin number, so PA2 (BTN2) and PB2 (GDO0_2) originally shared line 2. BTN2 is now on **PA5** (EXTI line 5, `EXTI4_15_IRQn`) in `main.h`/`g0_pinmap.h` — note PA3 (line 3) is used by M1_IRQ and PB11 (line 11) by GDO0_1, so neither was a valid fix. Mirror this in the CubeMX `.ioc` when it is created.
-2. **PB3 = I2S1_CK = SWO:** SWD works; SWO trace is unavailable.
-3. **VDDSPK source:** confirm filtered-VBUS approach vs dedicated 5 V boost (only matters for loud playback).
-4. **BOOT0 / auto-download circuit:** CH340 DTR/RTS → NRST/BOOT0 wiring to be drawn (UNVERIFIED).
-5. **Line-in level:** reserve a pad/attenuator footprint and verify PGA range for typical line sources; decide mono-plug handling (left-only vs summed) in firmware.
-6. **Jack detection:** optional spare-GPIO detect for J_IN/J_OUT — decide before layout.
-
-## 9. Bill of materials (Rev A draft)
-
-| # | Part | Purpose | LCSC / source | Notes |
-|---|------|---------|---------------|-------|
-| 1 | STM32G071CBU6 | MCU | C529343 | |
-| 2 | NAU88C22YG | Audio codec | C914209 | C10YG = C914208 (alt) |
-| 3 | GMI9745P-30dB | Electret mic | AliExpress / INGHAi | |
-| 4 | XHXDZ 40 mm 8 Ω 2 W | Speaker | AliExpress | Case-mounted |
-| 5 | SSD1306 0.96" module | Display | common module | 1.3" SH1106 option |
-| 6 | TMP102 | Temperature | TBD | I²C 0x49 |
-| 7 | CC1101 433 MHz module | Radio ×2 (J1/J3) | AliExpress | 26 MHz crystal |
-| 8 | CH340C | USB-UART | TBD | Auto-download support |
-| 9 | AP2112K-3.3 | 3.3 V LDO | TBD | ≥ 600 mA |
-| 10 | WS2812B | RGB LED | TBD | |
-| 11 | 12.288 MHz crystal | Audio clock | TBD | UNVERIFIED |
-| 12 | USB-C receptacle | Power/data | TBD | 5.1 kΩ CC pulldowns |
-| 13 | 3.5 mm stereo jack ×2 | J_OUT output + J_IN line input | TBD | TRS; AC coupling caps on J_IN |
-| 14 | Tactile buttons ×2 | PTT + BTN2 | TBD | |
-| 15 | 2.54 mm headers/sockets | J1, J3, M1, SWD, UART | TBD | |
-| 16 | 2-pin speaker connector | Speaker | TBD | JST-XH class |
-| 17 | Passives | R/C/L, bulk caps | TBD | 470 µF VBUS bulk |
-
-LCSC codes marked TBD must be selected at order time; the STM32/NAU88 codes were confirmed during component research (Oct 2026).
-
-## 10. Open questions summary
-
-| # | Question | Impact |
-|---|----------|--------|
-| 1 | HSE vs PLL for exact 12.288 MHz MCLK | Audio sample-rate accuracy |
-| 2 | EXTI line 2 conflict — resolved: BTN2 moved PA2 → PA5 | Button + radio IRQ |
-| 3 | M1 module connector pinout | Footprint |
-| 4 | J1/J3 socket pin order vs C0 | Module compatibility |
-| 5 | VDDSPK rail (VBUS vs boost) | Speaker loudness |
-| 6 | Final board size / enclosure | PCB + case |
-| 7 | License header alignment (MIT vs GPL-3.0) | Release hygiene |
-| 8 | Line-in attenuation / mono-plug handling | Input level + capture |
-| 9 | Audio routing menu design (input/output source) | Firmware UI |
+* USB-C: 5V input, 5.1k pulldown resistors on CC1/CC2.
+* Charger IC: IP2312-4V35 synchronous buck charger with solder bridges for 1A, 1.5A, and 3A charge current, and NTC temperature protection.
+* Battery Protection: XB5352A monolithic 1S LiPo protection IC (2.8V cutoff, 4.28V overcharge clamp, short-circuit protection).
+* Boost Converter: MT3608 1.2 MHz boost converter boosting battery voltage up to 5.0V.
+* Dynamic Power-Path (Load Sharing):
+  * USB 5V turns on an NPN transistor that pulls MT3608 EN pin low when USB is connected (zero battery drain).
+  * System 5V rail (5V_SYS) is powered directly by USB 5V (via Schottky diode) when plugged in, and MT3608 when running on battery.
+* Logic LDO: TLV75733PDBVR powered from 5V_SYS, guaranteeing steady 3.30V logic rail without dropout.
+* Speaker Supply: VDDSPK powered by 5V_SYS, delivering full 1W speaker power in both USB and battery modes.
+* Battery Fuel Gauge: 2x 100k precision resistive divider from VBAT into PB12 (ADC1_IN16).

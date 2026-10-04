@@ -60,12 +60,28 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
+/* Buttons */
 #define PTTButton_Pin GPIO_PIN_1
 #define PTTButton_GPIO_Port GPIOA
 #define PTTButton_EXTI_IRQn EXTI0_1_IRQn
-#define BTN2_Pin GPIO_PIN_5
-#define BTN2_GPIO_Port GPIOA
-#define BTN2_EXTI_IRQn EXTI4_15_IRQn
+
+#define BTN_UP_Pin GPIO_PIN_8
+#define BTN_UP_GPIO_Port GPIOB
+#define BTN_UP_EXTI_IRQn EXTI4_15_IRQn
+
+#define BTN_DOWN_Pin GPIO_PIN_9
+#define BTN_DOWN_GPIO_Port GPIOB
+#define BTN_DOWN_EXTI_IRQn EXTI4_15_IRQn
+
+#define BTN_OK_Pin GPIO_PIN_15
+#define BTN_OK_GPIO_Port GPIOA
+#define BTN_OK_EXTI_IRQn EXTI4_15_IRQn
+
+#define BTN_BACK_Pin GPIO_PIN_14
+#define BTN_BACK_GPIO_Port GPIOC
+#define BTN_BACK_EXTI_IRQn EXTI4_15_IRQn
+
+/* Lyrion Link Radios (LL1 & LL2) */
 #define CS1_Pin GPIO_PIN_8
 #define CS1_GPIO_Port GPIOA
 #define GDO0_1_Pin GPIO_PIN_11
@@ -73,17 +89,35 @@ void Error_Handler(void);
 #define GDO0_1_EXTI_IRQn EXTI4_15_IRQn
 #define GDO2_1_Pin GPIO_PIN_12
 #define GDO2_1_GPIO_Port GPIOA
-#define GDO2_1_EXTI_IRQn EXTI4_15_IRQn
+
+#define CS2_Pin GPIO_PIN_6
+#define CS2_GPIO_Port GPIOC
 #define GDO0_2_Pin GPIO_PIN_2
 #define GDO0_2_GPIO_Port GPIOB
 #define GDO0_2_EXTI_IRQn EXTI2_3_IRQn
-#define WS2812B_Pin GPIO_PIN_1
-#define WS2812B_GPIO_Port GPIOB
-#define CS2_Pin GPIO_PIN_6
-#define CS2_GPIO_Port GPIOC
 #define GDO2_2_Pin GPIO_PIN_10
 #define GDO2_2_GPIO_Port GPIOB
-#define GDO2_2_EXTI_IRQn EXTI4_15_IRQn
+
+/* LMS Smart Port */
+#define LMS_CS_Pin GPIO_PIN_2
+#define LMS_CS_GPIO_Port GPIOC
+#define LMS_IRQ_Pin GPIO_PIN_3
+#define LMS_IRQ_GPIO_Port GPIOC
+#define LMS_IRQ_EXTI_IRQn EXTI2_3_IRQn
+
+/* Spare SPI Chip Select */
+#define CS_SPARE_Pin GPIO_PIN_15
+#define CS_SPARE_GPIO_Port GPIOC
+
+/* Audio Switched Jack Detects */
+#define JACK_IN_DET_Pin GPIO_PIN_7
+#define JACK_IN_DET_GPIO_Port GPIOC
+#define JACK_OUT_DET_Pin GPIO_PIN_13
+#define JACK_OUT_DET_GPIO_Port GPIOC
+
+/* Indicators & Lighting */
+#define WS2812B_Pin GPIO_PIN_1
+#define WS2812B_GPIO_Port GPIOB
 #define LED1_Pin GPIO_PIN_0
 #define LED1_GPIO_Port GPIOC
 #define LED2_Pin GPIO_PIN_1
